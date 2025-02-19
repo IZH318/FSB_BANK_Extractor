@@ -7,7 +7,10 @@
 
 FMOD Sound Bank (.fsb) 및 Bank (.bank) 파일에서 오디오 스트림을 추출하여 Waveform Audio (.wav) 파일로 저장하는 프로그램입니다. <BR> <BR>
 
-명령줄 (CLI) 버전과 그래픽 사용자 인터페이스 (GUI) 버전을 모두 제공합니다.
+명령줄 (CLI) 버전과 그래픽 사용자 인터페이스 (GUI) 버전을 모두 제공합니다. <BR> <BR>
+
+**영문 버전의 README는 [README_EN.md](README_EN.md)에서 확인하실 수 있습니다.** <BR>
+**You can find the English version of the README in [README_EN.md](README_EN.md).**
 
 <BR>
 
