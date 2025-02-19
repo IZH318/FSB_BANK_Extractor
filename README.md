@@ -102,6 +102,8 @@ FMOD Sound Bank (.fsb) 및 Bank (.bank) 파일에서 오디오 스트림을 추�
 
 **[ ===== FSB_BANK_Extractor_CLI (C++ 및 C# CLI 버전) ===== ]**
 
+![캡처_2025_02_19_13_50_51_945](https://github.com/user-attachments/assets/a6eca308-23af-4068-ac3a-75543cc6411f) <BR> <BR>
+
 **1. 명령 프롬프트 (cmd.exe) 또는 PowerShell** 을 실행합니다. <BR> <BR>
 
 **2. 프로그램이 위치한 디렉토리로 이동**합니다. <BR>  `cd <프로그램_파일_경로>` 명령어 사용 (예: `cd D:\tools\FSB_BANK_Extractor`) <BR> <BR>
@@ -143,6 +145,8 @@ FMOD Sound Bank (.fsb) 및 Bank (.bank) 파일에서 오디오 스트림을 추�
 
 
 **[ ===== FSB_BANK_Extractor_CS_GUI (C# GUI 버전) ===== ]**
+
+![캡처_2025_02_19_13_51_10_306](https://github.com/user-attachments/assets/66ae8852-e84b-4cb5-99de-f46239863769) <BR> <BR>
 
 1. `FSB_BANK_Extractor_CS_GUI.exe` 파일을 실행합니다. <BR> <BR>
 
