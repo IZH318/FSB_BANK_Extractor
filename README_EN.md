@@ -69,7 +69,7 @@ Both Command-Line Interface (CLI) and Graphical User Interface (GUI) versions ar
 
 ## 🔄 Update History
 
-### v1.1.0 (2025-11-17)
+### v1.1.0 (2025-11-18)
 This update focuses on preventing data loss that can occur during file extraction and significantly improving the convenience of organizing extracted files.
 -   #### **✨ New Features**
     -   **Automatic Folder Creation Based on FMOD Tags**: Reads the "language" tag within FMOD sound files to automatically create subfolders named with language codes like 'EN', 'JP', etc., and saves the files into the corresponding folders. This allows for more systematic management of files containing multilingual audio.
