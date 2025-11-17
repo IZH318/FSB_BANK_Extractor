@@ -1,7 +1,7 @@
 ﻿/**
  * @file FSB_BANK_Extractor_CS.cs
  * @brief Extracts audio streams from FMOD Sound Bank (.fsb) and Bank (.bank) files and saves them as Waveform Audio (.wav) files.
- * @author Github IZH318 (https://github.com/IZH318)
+ * @author (Github) IZH318 (https://github.com/IZH318)
  *
  * @details
  * This program utilizes the FMOD Engine API to load and process FSB audio files.
@@ -22,7 +22,7 @@
  *  - Development Environment: Visual Studio 2022 (v143)
  *  - Target Framework: .NET Framework 4.8
  *  - Primary Test Platform: Windows 10 64-bit
- *  - Last Development Date: 2025-02-17
+ *  - Last Development Date: 2025-11-17
  *
  * Recommendations for Best Results:
  *  - Use FMOD Engine v2.03.06 for development and deployment.
@@ -620,7 +620,7 @@ namespace FSB_BANK_Extractor_CS
             fmodSystemResult = subSound.getName(out string subSoundName, 256); // Gets sub-sound name
             if (fmodSystemResult != FMOD.RESULT.OK && fmodSystemResult != FMOD.RESULT.ERR_TAGNOTFOUND) // Checks if getting name failed (but ignores FMOD.RESULT.ERR_TAGNOTFOUND, which is expected if no name tag exists)
             {
-                WriteLogMessage(logFile, "WARNING", "GetSoundInfo", $"FMOD::Sound::getName failed or tag not found for sub-sound {subSoundIndex}: {FMOD.Error.String(fmodSystemResult)}", verboseLogEnabled); // Logs warning if getting name failed or tag not found (WARNING level)
+                WriteLogMessage(logFile, "WARNING", "GetSoundInfo", $"FMOD::Sound::getName failed or tag not found for sub-sound {subSoundIndex}: {FMOD.Error.String(fmodSystemResult)}", verboseLogEnabled); // Logs warning if getting name failed or tag is not found (WARNING level)
                 info.subSoundName = ""; // Sets subSoundName to empty string if name retrieval fails or tag is not found
             }
             else
@@ -630,6 +630,39 @@ namespace FSB_BANK_Extractor_CS
             }
 
             return info; // Returns the SoundInfo structure containing retrieved information
+        }
+
+        // Added from GUI version to handle duplicate filenames
+        static string GetOutputFilePath(string outputDirectoryPath, string baseFileName, SoundInfo soundInfo, int subSoundIndex, HashSet<string> usedFileNames)
+        {
+            // Generate the initial base name for the output file, without extension
+            string outputFileName = string.IsNullOrEmpty(soundInfo.subSoundName) ? SanitizeFileName($"{baseFileName}_{subSoundIndex}") : SanitizeFileName(soundInfo.subSoundName);
+
+            // Construct the initial full path
+            string finalPath = Path.Combine(outputDirectoryPath, $"{outputFileName}.wav");
+            int counter = 1;
+
+            // Check for file name collisions and append a counter if necessary
+            while (usedFileNames.Contains(finalPath))
+            {
+                string tempFileName = $"{outputFileName}_{counter++}";
+                finalPath = Path.Combine(outputDirectoryPath, $"{tempFileName}.wav");
+            }
+
+            // Add the guaranteed unique path to the tracking set for this session
+            usedFileNames.Add(finalPath);
+
+            return finalPath;
+        }
+
+        // Added from GUI version to prepare subdirectories
+        static void PrepareOutputDirectory(string outputDirectory)
+        {
+            if (!Directory.Exists(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+                Console.WriteLine(" Created directory: " + outputDirectory);
+            }
         }
 
         /**
@@ -643,13 +676,14 @@ namespace FSB_BANK_Extractor_CS
          * @param outputDirectoryPath Path to the output directory where WAV file will be saved.
          * @param verboseLogEnabled Flag indicating if verbose logging is enabled.
          * @param logFile Output file stream for the log file.
+         * @param usedFileNames Added to track filenames and prevent overwrites.
          *
          * @details
          * This function orchestrates the process of extracting audio data from a given FMOD sub-sound and saving it as a WAV file.
          * It retrieves sound information, constructs the output file path, writes the WAV header, and then writes the audio data chunks
          * based on the sound format. It also handles error logging and console output for progress and status.
          */
-        static void ProcessSubSound(FMOD.System fmodSystem, FMOD.Sound subSound, int subSoundIndex, int totalSubSounds, string baseFileName, string outputDirectoryPath, bool verboseLogEnabled, StreamWriter logFile)
+        static void ProcessSubSound(FMOD.System fmodSystem, FMOD.Sound subSound, int subSoundIndex, int totalSubSounds, string baseFileName, string outputDirectoryPath, bool verboseLogEnabled, StreamWriter logFile, HashSet<string> usedFileNames)
         {
             logFile?.WriteLine(); // Null conditional operator to avoid NullReferenceException if logFile is null, adds a newline for readability
             WriteLogMessage(logFile, "INFO", "ProcessSubSound", $"Processing sub-sound {subSoundIndex + 1}/{totalSubSounds}", verboseLogEnabled); // Logs start of sub-sound processing
@@ -658,8 +692,23 @@ namespace FSB_BANK_Extractor_CS
 
             SoundInfo soundInfo = GetSoundInfo(subSound, subSoundIndex, verboseLogEnabled, logFile); // Retrieves sound information for the current sub-sound
 
-            string outputFileName = string.IsNullOrEmpty(soundInfo.subSoundName) ? SanitizeFileName($"{baseFileName}_{subSoundIndex}") : SanitizeFileName(soundInfo.subSoundName); // Constructs output file name, using sub-sound name if available, otherwise using base file name and sub-sound index, sanitizing the name
-            string fullOutputPath = Path.Combine(outputDirectoryPath, $"{outputFileName}.wav"); // Creates the full output file path by combining output directory, file name, and ".wav" extension
+            // Added from GUI version: Tag-based directory creation
+            string finalOutputDirectory = outputDirectoryPath;
+            FMOD.TAG tag;
+            if (subSound.getTag("language", 0, out tag) == FMOD.RESULT.OK)
+            {
+                string language = Marshal.PtrToStringAnsi(tag.data);
+                if (!string.IsNullOrEmpty(language))
+                {
+                    string languageFolder = Path.Combine(outputDirectoryPath, SanitizeFileName(language));
+                    // Create the subdirectory if it doesn't exist
+                    PrepareOutputDirectory(languageFolder);
+                    finalOutputDirectory = languageFolder;
+                }
+            }
+
+            // Using GetOutputFilePath to prevent overwrites
+            string fullOutputPath = GetOutputFilePath(finalOutputDirectory, baseFileName, soundInfo, subSoundIndex, usedFileNames);
 
             Console.WriteLine(); // Adds a newline to console output for readability
             Console.WriteLine($" Processing sub-sound {subSoundIndex + 1}/{totalSubSounds}:"); // Prints processing start message to console
@@ -667,6 +716,7 @@ namespace FSB_BANK_Extractor_CS
             Console.WriteLine($" Channels: {soundInfo.channels}"); // Prints number of channels to console
             Console.WriteLine($" Sample Rate: {soundInfo.sampleRate} Hz"); // Prints sample rate to console
             Console.WriteLine($" Length: {soundInfo.lengthMs} ms"); // Prints length in milliseconds to console
+            Console.WriteLine($" Output: {fullOutputPath}"); // Show the final output path
 
             FileStream wavFile = null; // FileStream for output WAV file, initialized to null
             BinaryWriter bw = null; // BinaryWriter for writing binary data to WAV file, initialized to null
@@ -866,17 +916,17 @@ namespace FSB_BANK_Extractor_CS
 
 
         /**
- * @brief Main function: Entry point of the FSB Extractor program.
- *
- * @param args Argument array from the command line.
- * @return int Program exit code (0 for success, 1 for error).
- *
- * @details
- * Orchestrates the FSB extraction process.
- * Parses command-line arguments for input file, output directory options (-res, -exe, -o), verbose logging (-v), and help (-h, -help).
- * Initializes FMOD Engine, loads FSB, and extracts sub-sounds as WAV files to the specified output directory.
- * Implements verbose logging and error handling. Returns 0 on success, 1 on error or incorrect usage.
- */
+         * @brief Main function: Entry point of the FSB Extractor program.
+         *
+         * @param args Argument array from the command line.
+         * @return int Program exit code (0 for success, 1 for error).
+         *
+         * @details
+         * Orchestrates the FSB extraction process.
+         * Parses command-line arguments for input file, output directory options (-res, -exe, -o), verbose logging (-v), and help (-h, -help).
+         * Initializes FMOD Engine, loads FSB, and extracts sub-sounds as WAV files to the specified output directory.
+         * Implements verbose logging and error handling. Returns 0 on success, 1 on error or incorrect usage.
+         */
         static int Main(string[] args)
         {
 #if _WIN32
@@ -1018,6 +1068,8 @@ namespace FSB_BANK_Extractor_CS
                         filesToProcess.Add(inputFilePath);
                     }
 
+                    // Added from GUI version: HashSet to track used filenames
+                    var usedFileNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                     foreach (string currentInputFilePath in filesToProcess)
                     {
@@ -1040,7 +1092,7 @@ namespace FSB_BANK_Extractor_CS
                                 }
                                 Console.WriteLine();
 
-                                string baseFileName = Path.GetFileNameWithoutExtension(currentInputFilePath);
+                                string baseFileName = Path.GetFileNameWithoutExtension(inputFilePath); // Use original input file name for base
                                 string outputDirectory = Path.Combine(outputDirectoryPath, baseFileName); // Create a subdirectory within the specified output directory, named after the input FSB file (without extension).
                                 string logFilePath; // Variable to store the path for the log file (if verbose logging is enabled).
 
@@ -1093,7 +1145,8 @@ namespace FSB_BANK_Extractor_CS
 
                                     if (result == FMOD.RESULT.OK) // If getting the sub-sound was successful.
                                     {
-                                        ProcessSubSound(fmodSystem.Get(), subSound, i, numSubSounds, baseFileName, outputDirectory, verboseLogEnabled, logFile); // Process the current sub-sound (extract audio and save as WAV).
+                                        // Pass usedFileNames to ProcessSubSound
+                                        ProcessSubSound(fmodSystem.Get(), subSound, i, numSubSounds, baseFileName, outputDirectory, verboseLogEnabled, logFile, usedFileNames); // Process the current sub-sound (extract audio and save as WAV).
                                         subSound.clearHandle(); // Release the current sub-sound object handle to free up resources after processing.
                                     }
                                     else // If subSound is not valid after getSubSound (shouldn't happen if result is not FMOD.RESULT.OK, but as a safety check)
@@ -1109,8 +1162,7 @@ namespace FSB_BANK_Extractor_CS
                         }
                         // No need to delete temporary files here, moved to finally block
                         Console.WriteLine();
-                        Console.WriteLine($" ===== '{Path.GetFileName(currentInputFilePath)}' Processing End ====="); // Display end processing message in console.
-
+                        Console.WriteLine($" ===== '{Path.GetFileName(inputFilePath)}' Processing End ====="); // Display end processing message in console.
                     }
 
 
