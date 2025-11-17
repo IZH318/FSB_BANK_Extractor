@@ -226,7 +226,7 @@ This update focuses on preventing data loss that can occur during file extractio
 
 - **Project Code License**
 
-   - The code of this project, excluding the FMOD Engine and icons themselves, is licensed under **GPL-3.0**.
+   - The code of this project, excluding the FMOD Engine and icons themselves, is licensed under **GNU General Public License v3.0**.
 
 <BR>
 
