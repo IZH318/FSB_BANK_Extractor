@@ -70,11 +70,41 @@ FMOD Sound Bank (.fsb) 및 Bank (.bank) 파일에서 오디오 스트림을 추�
 
 <BR>
 
+## 🔄 업데이트 내역
+
+### v1.1.0 (2025-11-17)
+이번 업데이트는 파일 추출 시 발생할 수 있는 데이터 손실을 방지하고, 추출된 파일의 정리 편의성을 대폭 향상시키는 데 중점을 두었습니다.
+-   #### **✨ 신규 기능**
+    -   **FMOD 태그 기반 폴더 자동 생성**: FMOD 사운드 파일 내에 포함된 "language" 태그를 읽어, 'EN', 'JP' 등 언어 코드에 맞는 하위 폴더를 자동으로 생성하고 해당 폴더에 파일을 저장합니다. 다국어 오디오를 포함하는 파일을 보다 체계적으로 관리할 수 있습니다.
+-   #### **🛠️ 개선 및 수정 사항**
+    -   **파일 덮어쓰기 방지 기능 추가**: 하나의 FSB/BANK 파일 내에 동일한 이름을 가진 하위 사운드가 여러 개 있을 경우, 기존에는 파일이 덮어쓰여 데이터가 유실되었습니다. 이제 `_1`, `_2` 와 같은 숫자 접미사를 자동으로 추가하여 모든 사운드가 고유한 파일명으로 안전하게 추출됩니다.
+    -   **추출 로직 리팩토링**: 파일명 생성 및 경로 처리 로직을 리팩토링하여 안정성을 높이고, 새로운 기능(태그 기반 폴더링, 덮어쓰기 방지)을 견고하게 지원하도록 구조를 개선했습니다.
+    -   **프로그램 정보 업데이트**: 프로그램 버전이 `1.1.0`으로 갱신되었으며, 개발자 정보 표기가 일부 수정되었습니다.
+-   #### **📄 라이선스**
+    -   **라이선스 변경**: 프로젝트의 라이선스를 **GPL-3.0**으로 변경하였습니다.
+
+<br>
+
+<details>
+<summary>📜 이전 업데이트 내역 - 클릭하여 열기</summary>
+<br>
+<details>
+<summary>v1.0.0 (2025-02-19)</summary>
+   
+-   #### **기타**
+    -   `FSB/BANK Extractor` 게시
+
+</details>
+</details>
+
+<BR>
+
 ## 💾 다운로드 <BR>
 | Program                                | URL                                                | 필수여부 | 비고                                                                                           |
 |----------------------------------------|----------------------------------------------------|----------|------------------------------------------------------------------------------------------------|
-| `Visual Studio 2022 (v143)`            | [Download](https://visualstudio.microsoft.com/)   | 필수     | ◼ 솔루션(프로젝트) 작업 |
-| `FMOD Engine (v2.03.06)`             | [Download](https://www.fmod.com/download#fmodengine)   | 필수     | ◼ FMOD API 사용 |
+| `.NET Framework 4.8`             | [Download](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48)   | 선택     | ◼ (오류 발생시 설치) GUI 사용 |
+| `Visual Studio 2022 (v143)`            | [Download](https://visualstudio.microsoft.com/)   | 선택     | ◼ (개발자만) 솔루션(프로젝트) 작업 |
+| `FMOD Engine (v2.03.06)`             | [Download](https://www.fmod.com/download#fmodengine)   | 선택     | ◼ (개발자만) FMOD API 사용 |
 
 <BR>
 
@@ -199,4 +229,13 @@ FMOD Sound Bank (.fsb) 및 Bank (.bank) 파일에서 오디오 스트림을 추�
 
 - **프로젝트 코드 라이선스**
 
-   - FMOD Engine 및 아이콘 자체를 제외한 본 프로젝트의 코드는 **Apache 2.0 License** 하에 라이선스가 부여됩니다.
+   - FMOD Engine 및 아이콘 자체를 제외한 본 프로젝트의 코드는 **GPL-3.0** 하에 라이선스가 부여됩니다.
+
+<BR>
+
+## 👏 Special Thanks To & References
+
+-   **[FMOD FSB files extractor (through their API)](https://zenhax.com/viewtopic.php@t=1901.html)**
+    -   zenhax.com 포럼의 **id-daemon** 님이 제작한 `fsb_aud_extr.exe`는 본 도구의 핵심 아이디어를 제공한 중요한 레퍼런스입니다.
+-   **[Redelax](https://github.com/Redelax)**
+    -   파일명 중복 시 데이터가 덮어쓰여 유실되는 문제점을 제보해주셨습니다. 덕분에 프로그램을 더욱 안정적으로 개선할 수 있었습니다.
