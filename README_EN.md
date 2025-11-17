@@ -67,11 +67,41 @@ Both Command-Line Interface (CLI) and Graphical User Interface (GUI) versions ar
 
 <BR>
 
+## 🔄 Update History
+
+### v1.1.0 (2025-11-17)
+This update focuses on preventing data loss that can occur during file extraction and significantly improving the convenience of organizing extracted files.
+-   #### **✨ New Features**
+    -   **Automatic Folder Creation Based on FMOD Tags**: Reads the "language" tag within FMOD sound files to automatically create subfolders named with language codes like 'EN', 'JP', etc., and saves the files into the corresponding folders. This allows for more systematic management of files containing multilingual audio.
+-   #### **🛠️ Improvements and Fixes**
+    -   **Added File Overwrite Protection**: Previously, if multiple sub-sounds with the same name existed within a single FSB/BANK file, they would be overwritten, resulting in data loss. Now, a numeric suffix like `_1`, `_2` is automatically appended to ensure all sounds are safely extracted with unique filenames.
+    -   **Extraction Logic Refactoring**: Refactored the filename generation and path handling logic to improve stability and provide robust support for new features (tag-based folder creation, overwrite protection).
+    -   **Program Information Update**: The program version has been updated to `1.1.0`, and some developer information has been revised.
+-   #### **📄 License**
+    -   **License Change**: The project's license has been changed to **GPL-3.0**.
+
+<br>
+
+<details>
+<summary>📜 Previous Update History - Click to expand</summary>
+<br>
+<details>
+<summary>v1.0.0 (2025-02-19)</summary>
+   
+-   #### **Other**
+    -   `FSB/BANK Extractor` released
+
+</details>
+</details>
+
+<BR>
+
 ## 💾 Download <BR>
 | Program                                | URL                                                | Required | Remarks                                                                                           |
 |----------------------------------------|----------------------------------------------------|----------|------------------------------------------------------------------------------------------------|
-| `Visual Studio 2022 (v143)`            | [Download](https://visualstudio.microsoft.com/)   | Required | ◼ Solution (Project) Work |
-| `FMOD Engine (v2.03.06)`             | [Download](https://www.fmod.com/download#fmodengine)   | Required | ◼ Using FMOD API |
+| `.NET Framework 4.8`             | [Download](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48)   | Optional | ◼ (Install if errors occur) For GUI use |
+| `Visual Studio 2022 (v143)`            | [Download](https://visualstudio.microsoft.com/)   | Optional | ◼ (For developers only) Solution (Project) Work |
+| `FMOD Engine (v2.03.06)`             | [Download](https://www.fmod.com/download#fmodengine)   | Optional | ◼ (For developers only) Using FMOD API |
 
 <BR>
 
@@ -87,7 +117,7 @@ Both Command-Line Interface (CLI) and Graphical User Interface (GUI) versions ar
 
 **[ C++ CLI Version ]**
 
-- Desktop development workload using C++ is required <BR>
+- Desktop development with C++ workload is required <BR>
 - C++ compiler is set to ISO C++17 standard <BR>
 - Windows SDK Version 10.0 (latest installed version) <BR> <BR>
 
@@ -196,4 +226,13 @@ Both Command-Line Interface (CLI) and Graphical User Interface (GUI) versions ar
 
 - **Project Code License**
 
-   - The code of this project, excluding the FMOD Engine and icons themselves, is licensed under the **Apache 2.0 License**.
+   - The code of this project, excluding the FMOD Engine and icons themselves, is licensed under **GPL-3.0**.
+
+<BR>
+
+## 👏 Special Thanks To & References
+
+-   **[FMOD FSB files extractor (through their API)](https://zenhax.com/viewtopic.php@t=1901.html)**
+    -   The `fsb_aud_extr.exe` created by **id-daemon** on the zenhax.com forum is a crucial reference that provided the core idea for this tool.
+-   **[Redelax](https://github.com/Redelax)**
+    -   Reported an issue where data was lost due to file overwriting when filenames were duplicated. Thanks to this report, the program could be improved to be more stable.
