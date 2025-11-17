@@ -1,7 +1,7 @@
 /**
  * @file FSB_BANK_Extractor_CPP.cpp
  * @brief Extracts audio streams from FMOD Sound Bank (.fsb) and Bank (.bank) files and saves them as Waveform Audio (.wav) files.
- * @author Github IZH318 (https://github.com/IZH318)
+ * @author (Github) IZH3V18 (https://github.com/IZH318)
  *
  * @details
  * This program utilizes the FMOD Engine API to load and process FSB audio files.
@@ -23,7 +23,7 @@
  *  - C++ Standard: ISO C++17 (/std:c++17)
  *  - Windows SDK Version: 10.0 (latest installed version)
  *  - Primary Test Platform: Windows 10 64-bit
- *  - Last Development Date: 2025-02-17
+ *  - Last Development Date: 2025-11-17
  *
  * Recommendations for Best Results:
  *  - Use FMOD Engine v2.03.06 for development and deployment.
@@ -48,6 +48,7 @@
 #include <cmath>    // For mathematical functions, though not heavily used in this specific code snippet
 #include <memory>   // For smart pointers like std::unique_ptr, std::shared_ptr (not directly used in this snippet but good practice)
 #include <unordered_map> // For hash-based associative containers, used for character sanitization
+#include <unordered_set> // For tracking used filenames to prevent overwrites
 #include <locale>   // For locale-specific information, used for UTF-8 support
 #include <codecvt>  // For code conversion facets, used for UTF-8 support (deprecated in C++17, alternatives exist)
 #include <chrono>   // For time-related functionalities, used for timestamping log messages
@@ -226,7 +227,8 @@ struct SoundInfo {
 };
 
 SoundInfo GetSoundInfo(FMOD::Sound* subSound, int subSoundIndex, bool verboseLogEnabled, std::ofstream& logFile); // Function declaration to retrieve sound information from an FMOD Sound object
-void ProcessSubSound(FMOD::System* fmodSystem, FMOD::Sound* subSound, int subSoundIndex, int totalSubSounds, const std::string& baseFileName, const std::filesystem::path& outputDirectoryPath, bool verboseLogEnabled, std::ofstream& logFile); // Function declaration to process a single sub-sound and save it as a WAV file
+// Function signature changed to accept usedFileNames
+void ProcessSubSound(FMOD::System* fmodSystem, FMOD::Sound* subSound, int subSoundIndex, int totalSubSounds, const std::string& baseFileName, const std::filesystem::path& outputDirectoryPath, bool verboseLogEnabled, std::ofstream& logFile, std::unordered_set<std::string>& usedFileNames);
 
 
 namespace BANKtoFSBExtractor {
@@ -238,9 +240,12 @@ namespace BANKtoFSBExtractor {
      * @return bool True if the "FSB5" signature is found, false otherwise.
      */
     bool FindFSB5Signature(std::ifstream& reader) {
-        long long startPosition = reader.tellg(); // Store the initial position of the stream
+        std::streampos startPosition = reader.tellg(); // Store the initial position of the stream
+        reader.seekg(0, std::ios::end);
+        long long fileSize = reader.tellg();
+        reader.seekg(startPosition);
 
-        while (reader.peek() != EOF) {
+        while (static_cast<long long>(reader.tellg()) < fileSize - 3) {
             char signature[4];
             reader.read(signature, 4);
             if (reader.gcount() == 4) { // Ensure 4 bytes were read
@@ -254,6 +259,7 @@ namespace BANKtoFSBExtractor {
             }
             reader.seekg(-3, std::ios::cur); // Move back 3 bytes to check next sequence
         }
+        reader.clear(); // Clear any EOF flags
         reader.seekg(startPosition); // Reset stream position if not found
         return false;
     }
@@ -335,6 +341,54 @@ namespace BANKtoFSBExtractor {
     }
 }
 
+/**
+ * @brief Gets a unique full output file path for a sub-sound WAV file, handling potential name collisions.
+ *
+ * @param outputDirectoryPath The base output directory path.
+ * @param baseFileName The base file name (stem of the input FSB file name).
+ * @param soundInfo The SoundInfo struct containing information about the sub-sound.
+ * @param subSoundIndex The index of the sub-sound being processed.
+ * @param usedFileNames A set containing file paths already used in the current extraction session to prevent overwrites.
+ * @return std::filesystem::path The unique full output file path for the WAV file.
+ */
+std::filesystem::path GetOutputFilePath(const std::filesystem::path& outputDirectoryPath, const std::string& baseFileName, const SoundInfo& soundInfo, int subSoundIndex, std::unordered_set<std::string>& usedFileNames) {
+    std::string outputFileName = std::strlen(soundInfo.subSoundName) > 0
+        ? SanitizeFileName(soundInfo.subSoundName)
+        : SanitizeFileName(baseFileName + "_" + std::to_string(subSoundIndex));
+
+    std::filesystem::path finalPath = outputDirectoryPath / (outputFileName + ".wav");
+    int counter = 1;
+
+    std::string finalPathStr = finalPath.u8string();
+
+    while (usedFileNames.count(finalPathStr)) {
+        std::string tempFileName = outputFileName + "_" + std::to_string(counter++);
+        finalPath = outputDirectoryPath / (tempFileName + ".wav");
+        finalPathStr = finalPath.u8string();
+    }
+
+    usedFileNames.insert(finalPathStr);
+    return finalPath;
+}
+
+/**
+ * @brief Prepares the output directory by creating it if it doesn't exist.
+ *
+ * @param outputDirectory The path to the output directory to prepare.
+ */
+void PrepareOutputDirectory(const std::filesystem::path& outputDirectory) {
+    if (!std::filesystem::exists(outputDirectory)) {
+        std::error_code ec;
+        std::filesystem::create_directories(outputDirectory, ec);
+        if (ec) {
+            std::cerr << "Error creating directory: " << outputDirectory.u8string() << " - " << ec.message() << std::endl;
+        }
+        else {
+            std::cout << " Created directory: " << std::filesystem::absolute(outputDirectory).u8string() << std::endl;
+        }
+    }
+}
+
 
 /**
  * @brief Main entry point of the FSB Extractor program.
@@ -400,6 +454,9 @@ int main(int argc, const char** argv) {
             return 1;       // Return 1 to indicate an error (input file not found)
         }
         outputDirectoryPath = inputFilePath.parent_path(); // Set the default output directory path to be the same directory as the input FSB/BANK file
+        if (outputDirectoryPath.empty()) {
+            outputDirectoryPath = std::filesystem::current_path();
+        }
 
         for (int i = 2; i < argc; ++i) { // Loop through the command-line arguments starting from the second argument (index 2)
             std::string arg = argv[i]; // Get the current argument
@@ -454,7 +511,7 @@ int main(int argc, const char** argv) {
 
         std::vector<std::filesystem::path> filesToProcess; // Vector to store paths of files to be processed (FSB or extracted FSBs from BANK)
         std::string inputFilePathLower = inputFilePath.string(); // Convert input file path to lowercase string for extension check
-        std::transform(inputFilePathLower.begin(), inputFilePathLower.end(), inputFilePathLower.begin(), static_cast<int(*)(int)>(&std::tolower)); // Use std::tolower with explicit cast
+        std::transform(inputFilePathLower.begin(), inputFilePathLower.end(), inputFilePathLower.begin(), [](unsigned char c) { return std::tolower(c); });
 
         if (inputFilePathLower.length() >= 5 && inputFilePathLower.substr(inputFilePathLower.length() - 5) == ".bank") { // If the input file is a BANK file
             filesToProcess = BANKtoFSBExtractor::ExtractFSBsFromBankFile(inputFilePath); // Extract embedded FSB files from the BANK file
@@ -470,6 +527,8 @@ int main(int argc, const char** argv) {
             filesToProcess.push_back(inputFilePath); // Add the input FSB file path to the processing list
         }
 
+        // Added from C# version to track used filenames
+        std::unordered_set<std::string> usedFileNames;
 
         for (const auto& currentInputFilePath : filesToProcess) { // Loop through each file to process (could be original FSB or extracted FSB from BANK)
             FMODSound soundWrapper(fmodSystem.get(), currentInputFilePath.string()); // Create FMODSound object to load the FSB file, using RAII for resource management
@@ -478,61 +537,53 @@ int main(int argc, const char** argv) {
             int numSubSounds = 0;
             CheckFMODResult(sound->getNumSubSounds(&numSubSounds), "FMOD::Sound::getNumSubSounds failed"); // Get the number of sub-sounds within the loaded FSB file
 
-            bool allSubSoundsProcessed = true; // Flag to track if all sub-sounds of the CURRENT FSB were processed successfully.
-
             if (numSubSounds > 0) { // If the FSB file contains one or more sub-sounds
                 std::cout << std::endl << " ===== '" << currentInputFilePath.filename().u8string() << "' Processing Start =====" << std::endl << std::endl; // Display processing start message in console
 
-                std::filesystem::path outputDirectory; // Filesystem path for the output directory
+                // Use original input file name for base folder and log name
+                std::string baseFileName = inputFilePath.stem().string();
+                std::filesystem::path outputDirectory = outputDirectoryPath / baseFileName;
                 std::filesystem::path logFilePath;     // Filesystem path for the log file
 
-                outputDirectory = outputDirectoryPath / currentInputFilePath.stem(); // Output directory is base output path + FSB filename (without extension)
-                std::error_code ec; // Error code for directory creation
-                if (!std::filesystem::create_directory(outputDirectory, ec) && ec) { // Attempt to create the output directory, check for errors other than directory already existing
-                    std::cerr << "Error creating directory: " << outputDirectory << " - " << ec.message() << std::endl; // Display error message if directory creation fails
-                    outputDirectory = outputDirectoryPath; // Fallback to the base output directory if creation fails
-                }
-                else if (ec) { /* directory already exists or other non-error */ } // If directory exists already or non-critical error, ignore
-                else { std::cout << " Created directory: " << std::filesystem::absolute(outputDirectory).u8string() << std::endl; } // Display directory creation success message
+                // Using PrepareOutputDirectory helper now
+                PrepareOutputDirectory(outputDirectory);
 
-                if (verboseLogEnabled) { // If verbose logging is enabled
-                    logFilePath = outputDirectory / ("_" + currentInputFilePath.stem().string() + ".log"); // Log file path is output directory + _FSBfilename.log
-                    std::cout << " Log file path: " << std::filesystem::absolute(logFilePath).u8string() << std::endl; // Display log file path in console
+                if (verboseLogEnabled && !logFile.is_open()) { // If verbose logging is enabled and log file is not yet open
+                    logFilePath = outputDirectory / ("_" + baseFileName + ".log");
                     logFile.open(logFilePath, std::ios::trunc); // Open log file in truncate mode (overwrite existing)
                     if (!logFile.is_open()) { // Check if log file opening failed
-                        std::cerr << "Error creating log file: " << logFilePath << std::endl; // Display error message if log file creation fails
+                        std::cerr << "Error creating log file: " << logFilePath.u8string() << std::endl; // Display error message if log file creation fails
                         verboseLogEnabled = false; // Disable verbose logging if log file can't be opened
                     }
                     else { // If log file opened successfully
-                        WriteLogMessage(logFile, "INFO", __FUNCTION__, "Log file opened: " + std::filesystem::absolute(logFilePath).u8string(), verboseLogEnabled, FMOD_OK); // Log message for log file opened
-                        WriteLogMessage(logFile, "INFO", __FUNCTION__, "Processing FSB file: " + std::filesystem::absolute(currentInputFilePath).u8string(), verboseLogEnabled, FMOD_OK); // Log message for FSB processing started
+                        std::cout << " Log file path: " << std::filesystem::absolute(logFilePath).u8string() << std::endl; // Display log file path in console
+                        WriteLogMessage(logFile, "INFO", "main", "Log file opened: " + std::filesystem::absolute(logFilePath).u8string(), verboseLogEnabled, FMOD_OK); // Log message for log file opened
                     }
                 }
+
+                WriteLogMessage(logFile, "INFO", "main", "Processing file: " + std::filesystem::absolute(currentInputFilePath).u8string(), verboseLogEnabled, FMOD_OK);
 
                 for (int i = 0; i < numSubSounds; ++i) { // Loop through each sub-sound in the FSB file
                     FMOD::Sound* subSound = nullptr; // Pointer to hold the sub-sound object
                     FMOD_RESULT result = sound->getSubSound(i, &subSound); // Get the i-th sub-sound from the FSB file
                     if (result != FMOD_OK) { // Check if getting sub-sound failed
                         std::cerr << " FMOD::Sound::getSubSound failed for sub-sound " << i << ": " << FMOD_ErrorString(result) << std::endl; // Display error message if getting sub-sound fails
-                        allSubSoundsProcessed = false; // FAIL: Set flag, as a subsound failed.
                         continue; // Skip to the next sub-sound if this one failed
                     }
                     try {
-                        ProcessSubSound(fmodSystem.get(), subSound, i, numSubSounds, currentInputFilePath.stem().string(), outputDirectory, verboseLogEnabled, std::ref(logFile)); // Process the sub-sound (extract to WAV)
+                        // Pass usedFileNames to ProcessSubSound
+                        ProcessSubSound(fmodSystem.get(), subSound, i, numSubSounds, baseFileName, outputDirectory, verboseLogEnabled, std::ref(logFile), usedFileNames); // Process the sub-sound (extract to WAV)
                     }
                     catch (const std::exception& ex) {
                         std::cerr << " Exception caught while processing sub-sound " << i << ": " << ex.what() << std::endl;
-                        allSubSoundsProcessed = false; // FAIL: Set flag on exception.
                     }
-                    subSound->release(); // Release the sub-sound object after processing
+                    if (subSound) subSound->release(); // Release the sub-sound object after processing
                 }
             }
             else { // If no sub-sounds are found in the FSB file
                 std::cout << " No sub-sounds found in the audio file." << std::endl; // Display message if no sub-sounds found
             }
         } // End of filesToProcess loop.
-
-        // All FSBs (or the single FSB) have been processed at this point.
 
     }
     catch (const std::exception& e) { // Catch any standard exceptions during program execution
@@ -547,7 +598,7 @@ int main(int argc, const char** argv) {
 
     if (logFile.is_open()) { // If the log file is open (verbose logging was enabled)
         logFile << std::endl; // Add a newline at the end of the log file for better formatting
-        WriteLogMessage(logFile, "INFO", __FUNCTION__, "Processing finished for Input file: " + inputFilePath.filename().u8string(), verboseLogEnabled, FMOD_OK); // Write log message indicating processing finished
+        WriteLogMessage(logFile, "INFO", "main", "Processing finished for Input file: " + inputFilePath.filename().u8string(), verboseLogEnabled, FMOD_OK); // Write log message indicating processing finished
         logFile.close(); // Close the log file
     }
     std::cout << std::endl << " ===== '" << inputFilePath.filename().u8string() << "' Processing End =====" << std::endl << std::endl; // Display program processing end message in console
@@ -753,14 +804,18 @@ bool WriteWAVHeader(std::ofstream& file, int sampleRate, int channels, size_t da
  * The log message includes a timestamp, log level, function name, and the message itself.
  * If an FMOD error code is provided (not FMOD_OK), it's also included in the log message.
  */
-void WriteLogMessage(std::ofstream& logFile, const std::string& level, const std::string& functionName, const std::string& message, bool verboseLogEnabled, FMOD_RESULT errorCode) {
+void WriteLogMessage(std::ofstream& logFile, const std::string& level, const std::string& functionName, const std::string& message, bool verboseLogEnabled, FMOD_RESULT errorCode = FMOD_OK) {
     if (logFile.is_open() && verboseLogEnabled) { // Checks if log file is open and verbose logging is enabled
         auto now = std::chrono::system_clock::now(); // Gets current system time
 
         std::time_t time_t_value = std::chrono::system_clock::to_time_t(now); // Converts system time to time_t (C-style time)
 
         std::tm time_components; // Struct to store time components (year, month, day, hour, minute, second)
+#ifdef _WIN32
         localtime_s(&time_components, &time_t_value); // Converts time_t to local time and fills time_components struct (thread-safe version for Windows)
+#else
+        localtime_r(&time_t_value, &time_components); // POSIX version
+#endif
 
         auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000; // Extracts milliseconds part from current time
 
@@ -809,15 +864,15 @@ namespace AudioProcessor {
         // Loop until all sound data is read
         while (totalBytesRead < soundLengthBytes) {
             // Determine how many bytes to read in this chunk, ensuring not to read beyond sound length or chunk size
-            unsigned int bytesToRead = std::min<unsigned int>(Constants::CHUNK_SIZE, soundLengthBytes - totalBytesRead);
+            unsigned int bytesToRead = std::min<unsigned int>(Constants::CHUNK_SIZE, static_cast<unsigned int>(soundLengthBytes - totalBytesRead));
 
             ++chunkCount; // Increment chunk counter before processing current chunk
             unsigned int bytesRead = 0; // Initialize bytes read for current chunk
             // Read data from FMOD sub-sound into buffer
             FMOD_RESULT fmodSystemResult = subSound->readData(buffer.data(), bytesToRead, &bytesRead);
             if (fmodSystemResult != FMOD_OK) {
-                WriteLogMessage(logFile, "INFO", __FUNCTION__, "Reading chunk " + std::to_string(chunkCount) + " - Bytes to read: " + std::to_string(bytesToRead), verboseLogEnabled, FMOD_OK);
-                WriteLogMessage(logFile, "ERROR", __FUNCTION__, "FMOD::Sound::readData failed for sub-sound " + std::to_string(subSoundIndex) + ", chunk " + std::to_string(chunkCount) + ": " + FMOD_ErrorString(fmodSystemResult) + " (Result code: " + std::to_string(fmodSystemResult) + ")", verboseLogEnabled, fmodSystemResult);
+                WriteLogMessage(logFile, "INFO", "WriteAudioDataChunk", "Reading chunk " + std::to_string(chunkCount) + " - Bytes to read: " + std::to_string(bytesToRead), verboseLogEnabled, FMOD_OK);
+                WriteLogMessage(logFile, "ERROR", "WriteAudioDataChunk", "FMOD::Sound::readData failed for sub-sound " + std::to_string(subSoundIndex) + ", chunk " + std::to_string(chunkCount) + ": " + FMOD_ErrorString(fmodSystemResult) + " (Result code: " + std::to_string(fmodSystemResult) + ")", verboseLogEnabled, fmodSystemResult);
                 std::cerr << " FMOD::Sound::readData failed for sub-sound " << subSoundIndex << ": " << FMOD_ErrorString(fmodSystemResult) << std::endl;
                 return false; // Return false to indicate failure
             }
@@ -827,7 +882,7 @@ namespace AudioProcessor {
                 wavFile.write(reinterpret_cast<const char*>(buffer.data()), bytesRead);
             }
             catch (const std::ios_base::failure& e) {
-                WriteLogMessage(logFile, "ERROR", __FUNCTION__, "Error writing WAV data for chunk " + std::to_string(chunkCount) + ": " + e.what(), verboseLogEnabled, FMOD_OK);
+                WriteLogMessage(logFile, "ERROR", "WriteAudioDataChunk", "Error writing WAV data for chunk " + std::to_string(chunkCount) + ": " + e.what(), verboseLogEnabled, FMOD_OK);
                 std::cerr << " Error writing WAV data: " << e.what() << std::endl;
                 return false; // Return false to indicate failure
             }
@@ -860,33 +915,25 @@ namespace AudioProcessor {
         unsigned int totalBytesRead = 0;
 
         while (totalBytesRead < soundLengthBytes) {
-            unsigned int bytesToRead = std::min<unsigned int>(Constants::CHUNK_SIZE, soundLengthBytes - totalBytesRead);
+            unsigned int bytesToRead = std::min<unsigned int>(Constants::CHUNK_SIZE, static_cast<unsigned int>(soundLengthBytes - totalBytesRead));
 
             ++chunkCount; // Increment chunk counter before processing current chunk
             unsigned int bytesRead = 0; // Initialize bytes read for current chunk
             // Read data from FMOD sub-sound into buffer
             FMOD_RESULT fmodSystemResult = subSound->readData(buffer.data(), bytesToRead, &bytesRead);
             if (fmodSystemResult != FMOD_OK) {
-                WriteLogMessage(logFile, "INFO", __FUNCTION__, "Reading chunk " + std::to_string(chunkCount) + " (PCM24) - Bytes to read: " + std::to_string(bytesToRead), verboseLogEnabled, FMOD_OK);
-                WriteLogMessage(logFile, "ERROR", __FUNCTION__, "FMOD::Sound::readData failed for sub-sound " + std::to_string(subSoundIndex) + ", chunk " + std::to_string(chunkCount) + " (PCM24): " + FMOD_ErrorString(fmodSystemResult) + " (Result code: " + std::to_string(fmodSystemResult) + ")", verboseLogEnabled, fmodSystemResult);
+                WriteLogMessage(logFile, "INFO", "WritePCM24DataChunk", "Reading chunk " + std::to_string(chunkCount) + " (PCM24) - Bytes to read: " + std::to_string(bytesToRead), verboseLogEnabled, FMOD_OK);
+                WriteLogMessage(logFile, "ERROR", "WritePCM24DataChunk", "FMOD::Sound::readData failed for sub-sound " + std::to_string(subSoundIndex) + ", chunk " + std::to_string(chunkCount) + " (PCM24): " + FMOD_ErrorString(fmodSystemResult) + " (Result code: " + std::to_string(fmodSystemResult) + ")", verboseLogEnabled, fmodSystemResult);
                 std::cerr << " FMOD::Sound::readData failed for sub-sound " << subSoundIndex << ": " << FMOD_ErrorString(fmodSystemResult) << std::endl;
                 return false; // Return false to indicate failure
             }
 
             try {
-                // Iterate through the buffer, writing 3 bytes at a time for each 24-bit sample
-                for (unsigned int i = 0; i < bytesRead; i += 3) {
-                    // Ensure there are enough bytes left to read a complete 24-bit sample
-                    if (i + 2 < bytesRead) {
-                        // Write each byte of the 24-bit sample individually
-                        wavFile.write(reinterpret_cast<const char*>(&buffer[i]), 1);
-                        wavFile.write(reinterpret_cast<const char*>(&buffer[i + 1]), 1);
-                        wavFile.write(reinterpret_cast<const char*>(&buffer[i + 2]), 1);
-                    }
-                }
+                // Since the data is already packed as 3-byte samples, we can write the buffer directly.
+                wavFile.write(reinterpret_cast<const char*>(buffer.data()), bytesRead);
             }
             catch (const std::ios_base::failure& e) {
-                WriteLogMessage(logFile, "ERROR", __FUNCTION__, "Error writing WAV data for chunk " + std::to_string(chunkCount) + " (PCM24): " + e.what(), verboseLogEnabled, FMOD_OK);
+                WriteLogMessage(logFile, "ERROR", "WritePCM24DataChunk", "Error writing WAV data for chunk " + std::to_string(chunkCount) + " (PCM24): " + e.what(), verboseLogEnabled, FMOD_OK);
                 std::cerr << " Error writing WAV data: " << e.what() << std::endl;
                 return false; // Return false to indicate failure
             }
@@ -915,7 +962,7 @@ namespace AudioProcessor {
      * Finally, it writes the clamped float sample data to the WAV file in binary float format.
      * The WAV float format utilizes IEEE 754 single-precision floating-point numbers.
      */
-    bool AudioProcessor::WritePCMFloatDataChunk(FMOD::Sound* subSound, std::ofstream& wavFile, size_t soundLengthBytes, int subSoundIndex, int& chunkCount, bool verboseLogEnabled, std::ofstream& logFile) {
+    bool WritePCMFloatDataChunk(FMOD::Sound* subSound, std::ofstream& wavFile, size_t soundLengthBytes, int subSoundIndex, int& chunkCount, bool verboseLogEnabled, std::ofstream& logFile) {
         // Calculate buffer size for float data based on chunk size
         std::vector<float> floatBuffer(Constants::CHUNK_SIZE / sizeof(float));
         unsigned int totalBytesRead = 0;
@@ -923,32 +970,38 @@ namespace AudioProcessor {
         // Loop until all sound data is read
         while (totalBytesRead < soundLengthBytes) {
             // Determine how many bytes to read in this chunk, ensuring not to read beyond sound length or chunk size
-            unsigned int bytesToRead = std::min<unsigned int>(Constants::CHUNK_SIZE, soundLengthBytes - totalBytesRead);
+            unsigned int bytesToRead = std::min<unsigned int>(Constants::CHUNK_SIZE, static_cast<unsigned int>(soundLengthBytes - totalBytesRead));
 
             ++chunkCount; // Increment chunk counter before processing current chunk
             unsigned int bytesRead = 0; // Initialize bytes read for current chunk
             // Read float data from FMOD sub-sound into float buffer
             FMOD_RESULT fmodSystemResult = subSound->readData(floatBuffer.data(), bytesToRead, &bytesRead);
             if (fmodSystemResult != FMOD_OK) {
-                WriteLogMessage(logFile, "INFO", __FUNCTION__, "Reading chunk " + std::to_string(chunkCount) + " (PCMFLOAT) - Bytes to read: " + std::to_string(bytesToRead), verboseLogEnabled, FMOD_OK);
-                WriteLogMessage(logFile, "ERROR", __FUNCTION__, "FMOD::Sound::readData failed for sub-sound " + std::to_string(subSoundIndex) + ", chunk " + std::to_string(chunkCount) + " (PCMFLOAT): " + FMOD_ErrorString(fmodSystemResult) + " (Result code: " + std::to_string(fmodSystemResult) + ")", verboseLogEnabled, fmodSystemResult);
+                WriteLogMessage(logFile, "INFO", "WritePCMFloatDataChunk", "Reading chunk " + std::to_string(chunkCount) + " (PCMFLOAT) - Bytes to read: " + std::to_string(bytesToRead), verboseLogEnabled, FMOD_OK);
+                WriteLogMessage(logFile, "ERROR", "WritePCMFloatDataChunk", "FMOD::Sound::readData failed for sub-sound " + std::to_string(subSoundIndex) + ", chunk " + std::to_string(chunkCount) + " (PCMFLOAT): " + FMOD_ErrorString(fmodSystemResult) + " (Result code: " + std::to_string(fmodSystemResult) + ")", verboseLogEnabled, fmodSystemResult);
                 std::cerr << " FMOD::Sound::readData failed for sub-sound " << subSoundIndex << ": " << FMOD_ErrorString(fmodSystemResult) << std::endl;
                 return false; // Return false to indicate failure
             }
 
-            // **Clamping Implementation Start**
-            for (int i = 0; i < bytesRead / sizeof(float); ++i) {
-                floatBuffer[i] = std::clamp(floatBuffer[i], -1.0f, 1.0f);
+            // **Clipping Implementation Start**
+            for (size_t i = 0; i < bytesRead / sizeof(float); ++i) {
+                if (floatBuffer[i] > 1.0f) {
+                    WriteLogMessage(logFile, "WARNING", "WritePCMFloatDataChunk", "PCMFLOAT clipping (upper): original=" + std::to_string(floatBuffer[i]) + ", limited=1.0", verboseLogEnabled, FMOD_OK);
+                    floatBuffer[i] = 1.0f;
+                }
+                else if (floatBuffer[i] < -1.0f) {
+                    WriteLogMessage(logFile, "WARNING", "WritePCMFloatDataChunk", "PCMFLOAT clipping (lower): original=" + std::to_string(floatBuffer[i]) + ", limited=-1.0", verboseLogEnabled, FMOD_OK);
+                    floatBuffer[i] = -1.0f;
+                }
             }
-            // **Clamping Implementation End**
-
+            // **Clipping Implementation End**
 
             try {
                 // Write the float buffer data directly to the WAV file
                 wavFile.write(reinterpret_cast<const char*>(floatBuffer.data()), bytesRead);
             }
             catch (const std::ios_base::failure& e) {
-                WriteLogMessage(logFile, "ERROR", __FUNCTION__, "Error writing WAV data for chunk " + std::to_string(chunkCount) + " (PCMFLOAT): " + e.what(), verboseLogEnabled, FMOD_OK);
+                WriteLogMessage(logFile, "ERROR", "WritePCMFloatDataChunk", "Error writing WAV data for chunk " + std::to_string(chunkCount) + " (PCMFLOAT): " + e.what(), verboseLogEnabled, FMOD_OK);
                 std::cerr << " Error writing WAV data: " << e.what() << std::endl;
                 return false; // Return false to indicate failure
             }
@@ -979,92 +1032,57 @@ SoundInfo GetSoundInfo(FMOD::Sound* subSound, int subSoundIndex, bool verboseLog
     float defaultFrequency; // Variable to store default frequency
     int defaultPriority;    // Variable to store default priority
 
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Getting sound format...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sound format
+    WriteLogMessage(logFile, "INFO", "GetSoundInfo", "Getting sound format...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sound format
     fmodSystemResult = subSound->getFormat(&info.soundType, &info.format, &info.channels, &info.bitsPerSample); // Gets sound format information from FMOD Sound object
     if (fmodSystemResult != FMOD_OK) { // Checks if getting format failed
-        WriteLogMessage(logFile, "ERROR", __FUNCTION__, "FMOD::Sound::getFormat failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, FMOD_OK); // Logs FMOD error (ERROR level)
+        WriteLogMessage(logFile, "ERROR", "GetSoundInfo", "FMOD::Sound::getFormat failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, fmodSystemResult); // Logs FMOD error (ERROR level)
         CheckFMODResult(fmodSystemResult, "FMOD::Sound::getFormat failed for sub-sound " + std::to_string(subSoundIndex)); // Throws exception on error
     }
     else {
-        std::string formatStr, soundTypeStr; // Strings to store format and sound type names for logging
-#define FORMAT_TO_STR(fmt) case fmt: formatStr = #fmt; break; // Macro to convert FMOD_SOUND_FORMAT enum to string
-#define SOUND_TYPE_TO_STR(type) case type: soundTypeStr = #type; break; // Macro to convert FMOD_SOUND_TYPE enum to string
-
-        switch (info.format) { // Switch statement to convert FMOD_SOUND_FORMAT to string
-            FORMAT_TO_STR(FMOD_SOUND_FORMAT_PCM8)
-                FORMAT_TO_STR(FMOD_SOUND_FORMAT_PCM16)
-                FORMAT_TO_STR(FMOD_SOUND_FORMAT_PCM24)
-                FORMAT_TO_STR(FMOD_SOUND_FORMAT_PCM32)
-                FORMAT_TO_STR(FMOD_SOUND_FORMAT_PCMFLOAT)
-                FORMAT_TO_STR(FMOD_SOUND_FORMAT_BITSTREAM)
-                FORMAT_TO_STR(FMOD_SOUND_FORMAT_MAX)
-        default: formatStr = "Unknown"; break;
-        }
-        switch (info.soundType) { // Switch statement to convert FMOD_SOUND_TYPE to string
-            SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_UNKNOWN)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_AIFF)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_ASF)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_FLAC)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_FSB)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_IT)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_MIDI)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_MOD)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_MPEG)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_OGGVORBIS)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_PLAYLIST)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_RAW)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_S3M)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_USER)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_WAV)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_XM)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_XMA)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_AUDIOQUEUE)
-                SOUND_TYPE_TO_STR(FMOD_SOUND_TYPE_MAX)
-        default: soundTypeStr = "Unknown"; break;
-        }
-        WriteLogMessage(logFile, "INFO", __FUNCTION__, "FMOD::Sound::getFormat successful - Sound Type: " + soundTypeStr + ", Format: " + formatStr + ", Channels: " + std::to_string(info.channels) + ", Bits Per Sample: " + std::to_string(info.bitsPerSample), verboseLogEnabled, FMOD_OK); // Logs successful format retrieval (INFO level)
+        // String conversion for logging is more complex in C++ than C#, so we'll omit the detailed enum-to-string for brevity here, but it can be added with switch statements if needed.
+        WriteLogMessage(logFile, "INFO", "GetSoundInfo", "FMOD::Sound::getFormat successful - Channels: " + std::to_string(info.channels) + ", Bits Per Sample: " + std::to_string(info.bitsPerSample), verboseLogEnabled, FMOD_OK); // Logs successful format retrieval (INFO level)
     }
 
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Getting default sound parameters...", verboseLogEnabled, FMOD_OK); // Logs attempt to get default parameters
+    WriteLogMessage(logFile, "INFO", "GetSoundInfo", "Getting default sound parameters...", verboseLogEnabled, FMOD_OK); // Logs attempt to get default parameters
     fmodSystemResult = subSound->getDefaults(&defaultFrequency, &defaultPriority); // Gets default frequency and priority from FMOD Sound object
     if (fmodSystemResult != FMOD_OK) { // Checks if getting defaults failed
-        WriteLogMessage(logFile, "ERROR", __FUNCTION__, "FMOD::Sound::getDefaults failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, FMOD_OK); // Logs FMOD error (ERROR level)
+        WriteLogMessage(logFile, "ERROR", "GetSoundInfo", "FMOD::Sound::getDefaults failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, fmodSystemResult); // Logs FMOD error (ERROR level)
         CheckFMODResult(fmodSystemResult, "FMOD::Sound::getDefaults failed for sub-sound " + std::to_string(subSoundIndex)); // Throws exception on error
     }
     else {
-        WriteLogMessage(logFile, "INFO", __FUNCTION__, "FMOD::Sound::getDefaults successful - Default Frequency: " + std::to_string(defaultFrequency) + ", Default Priority: " + std::to_string(defaultPriority), verboseLogEnabled, FMOD_OK); // Logs successful defaults retrieval (INFO level)
+        WriteLogMessage(logFile, "INFO", "GetSoundInfo", "FMOD::Sound::getDefaults successful - Default Frequency: " + std::to_string(defaultFrequency) + ", Default Priority: " + std::to_string(defaultPriority), verboseLogEnabled, FMOD_OK); // Logs successful defaults retrieval (INFO level)
     }
 
     info.sampleRate = (defaultFrequency > 0) ? static_cast<int>(defaultFrequency) : 44100; // Sets sample rate, using default frequency if available, otherwise defaults to 44100 Hz
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Final Sample Rate for WAV header: " + std::to_string(info.sampleRate), verboseLogEnabled, FMOD_OK); // Logs final sample rate used for WAV header
+    WriteLogMessage(logFile, "INFO", "GetSoundInfo", "Final Sample Rate for WAV header: " + std::to_string(info.sampleRate), verboseLogEnabled, FMOD_OK); // Logs final sample rate used for WAV header
 
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Getting sound length in bytes...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sound length in bytes
+    WriteLogMessage(logFile, "INFO", "GetSoundInfo", "Getting sound length in bytes...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sound length in bytes
     fmodSystemResult = subSound->getLength(&info.soundLengthBytes, FMOD_TIMEUNIT_PCMBYTES); // Gets sound length in bytes
     if (fmodSystemResult != FMOD_OK) { // Checks if getting length failed
-        WriteLogMessage(logFile, "ERROR", __FUNCTION__, "FMOD::Sound::getLength (bytes) failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, FMOD_OK); // Logs FMOD error (ERROR level)
+        WriteLogMessage(logFile, "ERROR", "GetSoundInfo", "FMOD::Sound::getLength (bytes) failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, fmodSystemResult); // Logs FMOD error (ERROR level)
         CheckFMODResult(fmodSystemResult, "FMOD::Sound::getLength (bytes) failed for sub-sound " + std::to_string(subSoundIndex)); // Throws exception on error
     }
     else {
-        WriteLogMessage(logFile, "INFO", __FUNCTION__, "FMOD::Sound::getLength (bytes) successful - Length: " + std::to_string(info.soundLengthBytes) + " bytes", verboseLogEnabled, FMOD_OK); // Logs successful length retrieval in bytes (INFO level)
+        WriteLogMessage(logFile, "INFO", "GetSoundInfo", "FMOD::Sound::getLength (bytes) successful - Length: " + std::to_string(info.soundLengthBytes) + " bytes", verboseLogEnabled, FMOD_OK); // Logs successful length retrieval in bytes (INFO level)
     }
 
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Getting sound length in milliseconds...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sound length in milliseconds
+    WriteLogMessage(logFile, "INFO", "GetSoundInfo", "Getting sound length in milliseconds...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sound length in milliseconds
     fmodSystemResult = subSound->getLength(&info.lengthMs, FMOD_TIMEUNIT_MS); // Gets sound length in milliseconds
     if (fmodSystemResult != FMOD_OK) { // Checks if getting length failed
-        WriteLogMessage(logFile, "ERROR", __FUNCTION__, "FMOD::Sound::getLength (ms) failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, FMOD_OK); // Logs FMOD error (ERROR level)
+        WriteLogMessage(logFile, "ERROR", "GetSoundInfo", "FMOD::Sound::getLength (ms) failed for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, fmodSystemResult); // Logs FMOD error (ERROR level)
         CheckFMODResult(fmodSystemResult, "FMOD::Sound::getLength (ms) failed for sub-sound " + std::to_string(subSoundIndex)); // Throws exception on error
     }
     else {
-        WriteLogMessage(logFile, "INFO", __FUNCTION__, "FMOD::Sound::getLength (ms) successful - Length: " + std::to_string(info.lengthMs) + " ms", verboseLogEnabled, FMOD_OK); // Logs successful length retrieval in milliseconds (INFO level)
+        WriteLogMessage(logFile, "INFO", "GetSoundInfo", "FMOD::Sound::getLength (ms) successful - Length: " + std::to_string(info.lengthMs) + " ms", verboseLogEnabled, FMOD_OK); // Logs successful length retrieval in milliseconds (INFO level)
     }
 
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Getting sub-sound name...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sub-sound name
-    fmodSystemResult = subSound->getName(info.subSoundName, sizeof(info.subSoundName) - 1); // Gets sub-sound name
+    WriteLogMessage(logFile, "INFO", "GetSoundInfo", "Getting sub-sound name...", verboseLogEnabled, FMOD_OK); // Logs attempt to get sub-sound name
+    fmodSystemResult = subSound->getName(info.subSoundName, sizeof(info.subSoundName)); // Gets sub-sound name
     if (fmodSystemResult != FMOD_OK && fmodSystemResult != FMOD_ERR_TAGNOTFOUND) { // Checks if getting name failed (but ignores FMOD_ERR_TAGNOTFOUND, which is expected if no name tag exists)
-        WriteLogMessage(logFile, "WARNING", __FUNCTION__, "FMOD::Sound::getName failed or tag not found for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, FMOD_OK); // Logs warning if getting name failed or tag not found (WARNING level)
+        WriteLogMessage(logFile, "WARNING", "GetSoundInfo", "FMOD::Sound::getName failed or tag not found for sub-sound " + std::to_string(subSoundIndex) + ": " + FMOD_ErrorString(fmodSystemResult), verboseLogEnabled, fmodSystemResult); // Logs warning if getting name failed or tag not found (WARNING level)
     }
     else {
-        WriteLogMessage(logFile, "INFO", __FUNCTION__, "FMOD::Sound::getName successful - Name: " + std::string(info.subSoundName), verboseLogEnabled, FMOD_OK); // Logs successful name retrieval (INFO level)
+        WriteLogMessage(logFile, "INFO", "GetSoundInfo", "FMOD::Sound::getName successful - Name: " + std::string(info.subSoundName), verboseLogEnabled, FMOD_OK); // Logs successful name retrieval (INFO level)
     }
     return info; // Returns the SoundInfo structure containing retrieved information
 }
@@ -1081,66 +1099,83 @@ SoundInfo GetSoundInfo(FMOD::Sound* subSound, int subSoundIndex, bool verboseLog
  * @param outputDirectoryPath Path to the output directory where WAV file will be saved.
  * @param verboseLogEnabled Flag indicating if verbose logging is enabled.
  * @param logFile Output file stream for the log file.
+ * @param usedFileNames A set to track used filenames and prevent overwrites.
  *
  * @details
  * This function orchestrates the process of extracting audio data from a given FMOD sub-sound and saving it as a WAV file.
  * It retrieves sound information, constructs the output file path, writes the WAV header, and then writes the audio data chunks
  * based on the sound format. It also handles error logging and console output for progress and status.
  */
-void ProcessSubSound(FMOD::System* fmodSystem, FMOD::Sound* subSound, int subSoundIndex, int totalSubSounds, const std::string& baseFileName, const std::filesystem::path& outputDirectoryPath, bool verboseLogEnabled, std::ofstream& logFile) {
+void ProcessSubSound(FMOD::System* fmodSystem, FMOD::Sound* subSound, int subSoundIndex, int totalSubSounds, const std::string& baseFileName, const std::filesystem::path& outputDirectoryPath, bool verboseLogEnabled, std::ofstream& logFile, std::unordered_set<std::string>& usedFileNames) {
 
     logFile << std::endl; // Adds a newline to the log file for better readability
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Processing sub-sound " + std::to_string(subSoundIndex + 1) + "/" + std::to_string(totalSubSounds), verboseLogEnabled, FMOD_OK); // Logs start of sub-sound processing
+    WriteLogMessage(logFile, "INFO", "ProcessSubSound", "Processing sub-sound " + std::to_string(subSoundIndex + 1) + "/" + std::to_string(totalSubSounds), verboseLogEnabled, FMOD_OK); // Logs start of sub-sound processing
     CheckFMODResult(subSound->seekData(0), "FMOD::Sound::seekData failed for sub-sound " + std::to_string(subSoundIndex)); // Seeks to the beginning of the sub-sound data
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "FMOD::Sound::seekData successful", verboseLogEnabled, FMOD_OK); // Logs successful seek operation
+    WriteLogMessage(logFile, "INFO", "ProcessSubSound", "FMOD::Sound::seekData successful", verboseLogEnabled, FMOD_OK); // Logs successful seek operation
 
     SoundInfo soundInfo = GetSoundInfo(subSound, subSoundIndex, verboseLogEnabled, logFile); // Retrieves sound information for the current sub-sound
 
-    std::string outputFileName = std::strlen(soundInfo.subSoundName) > 0 ? SanitizeFileName(soundInfo.subSoundName) : SanitizeFileName(baseFileName + "_" + std::to_string(subSoundIndex)); // Constructs output file name, using sub-sound name if available, otherwise using base file name and sub-sound index, sanitizing the name
-    std::filesystem::path fullOutputPath = outputDirectoryPath / (outputFileName + ".wav"); // Creates the full output file path by combining output directory, file name, and ".wav" extension
+    // Added tag-based directory creation
+    std::filesystem::path finalOutputDirectory = outputDirectoryPath;
+    FMOD_TAG tag;
+    if (subSound->getTag("language", 0, &tag) == FMOD_OK) {
+        if (tag.datatype == FMOD_TAGDATATYPE_STRING) {
+            std::string language(static_cast<char*>(tag.data));
+            if (!language.empty()) {
+                std::filesystem::path languageFolder = outputDirectoryPath / SanitizeFileName(language);
+                PrepareOutputDirectory(languageFolder);
+                finalOutputDirectory = languageFolder;
+            }
+        }
+    }
+
+    // Using GetOutputFilePath to prevent overwrites
+    std::filesystem::path fullOutputPath = GetOutputFilePath(finalOutputDirectory, baseFileName, soundInfo, subSoundIndex, usedFileNames);
 
     std::cout << std::endl << " Processing sub-sound " << subSoundIndex + 1 << "/" << totalSubSounds << ":" << std::endl; // Prints processing start message to console
-    std::cout << " Name: " << (std::strlen(soundInfo.subSoundName) > 0 ? soundInfo.subSoundName : "") << std::endl; // Prints sub-sound name to console (if available)
+    std::cout << " Name: " << (std::strlen(soundInfo.subSoundName) > 0 ? soundInfo.subSoundName : "<no name>") << std::endl; // Prints sub-sound name to console (if available)
     std::cout << " Channels: " << soundInfo.channels << std::endl; // Prints number of channels to console
     std::cout << " Sample Rate: " << soundInfo.sampleRate << " Hz" << std::endl; // Prints sample rate to console
     std::cout << " Length: " << soundInfo.lengthMs << " ms" << std::endl; // Prints length in milliseconds to console
+    std::cout << " Output: " << fullOutputPath.u8string() << std::endl; // Show final output path
 
-    std::ofstream wavFile(fullOutputPath.wstring(), std::ios::binary | std::ios::trunc); // Opens output WAV file in binary truncate mode (overwrite if exists)
+    std::ofstream wavFile(fullOutputPath, std::ios::binary | std::ios::trunc); // Opens output WAV file in binary truncate mode (overwrite if exists)
     if (!wavFile.is_open()) { // Checks if WAV file opening failed
-        WriteLogMessage(logFile, "ERROR", __FUNCTION__, "Error opening output WAV file: " + fullOutputPath.u8string(), verboseLogEnabled, FMOD_OK); // Logs file open error (ERROR level)
+        WriteLogMessage(logFile, "ERROR", "ProcessSubSound", "Error opening output WAV file: " + fullOutputPath.u8string(), verboseLogEnabled, FMOD_OK); // Logs file open error (ERROR level)
         std::cerr << " Error opening output WAV file: " << fullOutputPath.u8string() << std::endl; // Prints error to std::cerr
         throw std::runtime_error("Failed to open output WAV file"); // Throws exception on error
     }
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "WAV file opened successfully: " + fullOutputPath.u8string(), verboseLogEnabled, FMOD_OK); // Logs successful file open (INFO level)
+    WriteLogMessage(logFile, "INFO", "ProcessSubSound", "WAV file opened successfully: " + fullOutputPath.u8string(), verboseLogEnabled, FMOD_OK); // Logs successful file open (INFO level)
 
     if (!WriteWAVHeader(wavFile, soundInfo.sampleRate, soundInfo.channels, soundInfo.soundLengthBytes, soundInfo.bitsPerSample, soundInfo.format)) { // Writes WAV header to the file
-        WriteLogMessage(logFile, "ERROR", __FUNCTION__, "Error writing WAV header to file: " + fullOutputPath.u8string(), verboseLogEnabled, FMOD_OK); // Logs header write error (ERROR level)
+        WriteLogMessage(logFile, "ERROR", "ProcessSubSound", "Error writing WAV header to file: " + fullOutputPath.u8string(), verboseLogEnabled, FMOD_OK); // Logs header write error (ERROR level)
         std::cerr << " Error writing WAV header to file: " << fullOutputPath.u8string() << std::endl; // Prints error to std::cerr
         throw std::runtime_error("Failed to write WAV header"); // Throws exception on error
     }
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "WAV header written successfully", verboseLogEnabled, FMOD_OK); // Logs successful header write (INFO level)
+    WriteLogMessage(logFile, "INFO", "ProcessSubSound", "WAV header written successfully", verboseLogEnabled, FMOD_OK); // Logs successful header write (INFO level)
 
     int chunkCount = 0; // Initializes chunk counter for logging
     bool writeSuccess = false; // Flag to track success of audio data writing
 
     switch (soundInfo.format) { // Switch statement based on sound format to determine data writing function
-    case FMOD_SOUND_FORMAT_PCM8: writeSuccess = AudioProcessor::WriteAudioDataChunk<unsigned char>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, logFile); break; // Writes 8-bit PCM data
-    case FMOD_SOUND_FORMAT_PCM16: writeSuccess = AudioProcessor::WriteAudioDataChunk<short>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, logFile); break; // Writes 16-bit PCM data
-    case FMOD_SOUND_FORMAT_PCM24: writeSuccess = AudioProcessor::WritePCM24DataChunk(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, logFile); break; // Writes 24-bit PCM data
-    case FMOD_SOUND_FORMAT_PCM32: writeSuccess = AudioProcessor::WriteAudioDataChunk<int>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, logFile); break; // Writes 32-bit PCM data
-    case FMOD_SOUND_FORMAT_PCMFLOAT: writeSuccess = AudioProcessor::WritePCMFloatDataChunk(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, logFile); break; // Writes PCM float data
+    case FMOD_SOUND_FORMAT_PCM8:   writeSuccess = AudioProcessor::WriteAudioDataChunk<unsigned char>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, std::ref(logFile)); break; // Writes 8-bit PCM data
+    case FMOD_SOUND_FORMAT_PCM16:  writeSuccess = AudioProcessor::WriteAudioDataChunk<short>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, std::ref(logFile)); break; // Writes 16-bit PCM data
+    case FMOD_SOUND_FORMAT_PCM24:  writeSuccess = AudioProcessor::WritePCM24DataChunk(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, std::ref(logFile)); break; // Writes 24-bit PCM data
+    case FMOD_SOUND_FORMAT_PCM32:  writeSuccess = AudioProcessor::WriteAudioDataChunk<int>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, std::ref(logFile)); break; // Writes 32-bit PCM data
+    case FMOD_SOUND_FORMAT_PCMFLOAT: writeSuccess = AudioProcessor::WritePCMFloatDataChunk(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, std::ref(logFile)); break; // Writes PCM float data
     default:
-        WriteLogMessage(logFile, "WARNING", __FUNCTION__, "Unsupported format detected: " + std::to_string(soundInfo.format) + ". Processing as PCM16 (potentially incorrect).", verboseLogEnabled, FMOD_OK); // Logs warning for unsupported format (WARNING level)
-        writeSuccess = AudioProcessor::WriteAudioDataChunk<short>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, logFile); // Falls back to writing as 16-bit PCM (potential data loss or incorrect output)
+        WriteLogMessage(logFile, "WARNING", "ProcessSubSound", "Unsupported format detected: " + std::to_string(soundInfo.format) + ". Processing as PCM16 (potentially incorrect).", verboseLogEnabled, FMOD_OK); // Logs warning for unsupported format (WARNING level)
+        std::cout << " Warning: Unsupported format, attempting to extract as PCM16." << std::endl;
+        writeSuccess = AudioProcessor::WriteAudioDataChunk<short>(subSound, wavFile, soundInfo.soundLengthBytes, subSoundIndex, chunkCount, verboseLogEnabled, std::ref(logFile)); // Falls back to writing as 16-bit PCM (potential data loss or incorrect output)
         break;
     }
 
     if (!writeSuccess) { // Checks if audio data writing failed
-        WriteLogMessage(logFile, "ERROR", __FUNCTION__, "Error writing audio data to WAV file for sub-sound " + std::to_string(subSoundIndex), verboseLogEnabled, FMOD_OK); // Logs data write error (ERROR level)
+        WriteLogMessage(logFile, "ERROR", "ProcessSubSound", "Error writing audio data to WAV file for sub-sound " + std::to_string(subSoundIndex), verboseLogEnabled, FMOD_OK); // Logs data write error (ERROR level)
         std::cerr << " Error writing audio data to WAV file for sub-sound " << subSoundIndex << std::endl; // Prints error to std::cerr
         throw std::runtime_error("Failed to write audio data to WAV file"); // Throws exception on error
     }
 
-    WriteLogMessage(logFile, "INFO", __FUNCTION__, "Sub-sound processing finished successfully", verboseLogEnabled, FMOD_OK); // Logs successful sub-sound processing (INFO level)
+    WriteLogMessage(logFile, "INFO", "ProcessSubSound", "Sub-sound processing finished successfully", verboseLogEnabled, FMOD_OK); // Logs successful sub-sound processing (INFO level)
     std::cout << " Status: Success" << std::endl; // Prints success status to console
 }
