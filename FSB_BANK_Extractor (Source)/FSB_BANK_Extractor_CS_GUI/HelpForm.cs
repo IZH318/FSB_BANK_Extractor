@@ -100,8 +100,8 @@ namespace FSB_BANK_Extractor_CS_GUI
                 "     - 제공처: Flaticon\n" +
                 "     - URL: https://www.flaticon.com/free-icons/unboxing\n\n" +
 
-                "   - 본 프로그램의 코드 (FMOD Engine 제외) 는 Apache 2.0 라이선스 하에 배포됩니다.\n" +
-                "     - Apache License 버전 2.0\n" +
+                "   - 본 프로그램의 코드 (FMOD Engine 제외) 는 GNU General Public License v3.0 하에 배포됩니다.\n" +
+                "     - GNU General Public License v3.0\n" +
                 "       - 귀하는 본 라이선스를 준수하지 않고서는 이 파일을 사용할 수 없습니다.\n" +
                 "       - 특정 언어에 대한 라이선스, 허가 및 제한 사항은 라이선스를 참조하십시오.";
 
@@ -170,8 +170,8 @@ namespace FSB_BANK_Extractor_CS_GUI
                 "     - Provider: Flaticon\n" +
                 "     - URL: https://www.flaticon.com/free-icons/unboxing\n\n" +
 
-                "   - The code of this program (excluding FMOD Engine) is distributed under the Apache 2.0 license.\n" +
-                "     - Apache License Version 2.0\n" +
+                "   - The code of this program (excluding FMOD Engine) is distributed under the GNU General Public License v3.0 license.\n" +
+                "     - GNU General Public License v3.0\n" +
                 "       - You may not use this file except in compliance with the License.\n" +
                 "       - See the License for the specific language governing permissions and limitations under the License.";
 
