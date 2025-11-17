@@ -1,7 +1,7 @@
 ﻿/**
  * @file FSB_BANK_Extractor_CS_GUI.cs
  * @brief Main form for the FSB/BANK Extractor GUI application.
- * @author Github IZH318 (https://github.com/IZH318)
+ * @author (Github) IZH318 (https://github.com/IZH318)
  *
  * @details
  * This file contains the implementation of the main form (Form1) for the FSB/BANK Extractor GUI application.
@@ -28,7 +28,7 @@
  *  - Development Environment: Visual Studio 2022 (v143)
  *  - Target Framework: .NET Framework 4.8
  *  - Primary Test Platform: Windows 10 64-bit
- *  - Last Development Date: 2025-02-17
+ *  - Last Development Date: 2025-11-17
  *
  * Recommendations for Best Results:
  *  - Use FMOD Engine v2.03.06 for development and deployment.
@@ -809,26 +809,43 @@ namespace FSB_BANK_Extractor_CS_GUI
         }
 
         /**
-         * @brief Gets the full output file path for a sub-sound WAV file.
+         * @brief Gets a unique full output file path for a sub-sound WAV file, handling potential name collisions.
          *
          * @param outputDirectoryPath The base output directory path.
          * @param baseFileName The base file name (stem of the input FSB file name).
          * @param soundInfo The SoundInfo struct containing information about the sub-sound.
          * @param subSoundIndex The index of the sub-sound being processed.
-         * @return string The full output file path for the WAV file.
+         * @param usedFileNames A HashSet containing file paths already used in the current extraction session to prevent overwrites.
+         * @return string The unique full output file path for the WAV file.
          *
          * @details
-         * This static helper function constructs the full output file path for a sub-sound WAV file.
-         * It takes the output directory path, base file name, sound information, and sub-sound index as input.
-         * It generates a unique file name for each sub-sound, using the sub-sound name if available, or a combination
+         * This static helper function constructs a unique full output file path for a sub-sound WAV file.
+         * It generates a base file name for each sub-sound, using the sub-sound name if available, or a combination
          * of the base file name and sub-sound index if the sub-sound name is not available.
-         * The generated file name is sanitized using SanitizeFileName to ensure it's valid for file systems.
-         * The final output file path is created by combining the output directory, sanitized file name, and ".wav" extension.
+         * It then checks if the generated file path already exists in the `usedFileNames` set. If a collision is detected,
+         * it appends a numeric suffix (e.g., "_1", "_2") to the file name until a unique path is found.
+         * The final unique path is added to the `usedFileNames` set and returned.
          */
-        static string GetOutputFilePath(string outputDirectoryPath, string baseFileName, SoundInfo soundInfo, int subSoundIndex)
+        static string GetOutputFilePath(string outputDirectoryPath, string baseFileName, SoundInfo soundInfo, int subSoundIndex, HashSet<string> usedFileNames)
         {
-            string outputFileName = string.IsNullOrEmpty(soundInfo.subSoundName) ? SanitizeFileName($"{baseFileName}_{subSoundIndex}") : SanitizeFileName(soundInfo.subSoundName); // Generate output file name, using sub-sound name or base file name and index, sanitize file name
-            return Path.Combine(outputDirectoryPath, $"{outputFileName}.wav"); // Combine output directory path, file name, and ".wav" extension to create full output file path
+            // Generate the initial base name for the output file, without extension
+            string outputFileName = string.IsNullOrEmpty(soundInfo.subSoundName) ? SanitizeFileName($"{baseFileName}_{subSoundIndex}") : SanitizeFileName(soundInfo.subSoundName);
+
+            // Construct the initial full path
+            string finalPath = Path.Combine(outputDirectoryPath, $"{outputFileName}.wav");
+            int counter = 1;
+
+            // Check for file name collisions and append a counter if necessary
+            while (usedFileNames.Contains(finalPath))
+            {
+                string tempFileName = $"{outputFileName}_{counter++}";
+                finalPath = Path.Combine(outputDirectoryPath, $"{tempFileName}.wav");
+            }
+
+            // Add the guaranteed unique path to the tracking set for this session
+            usedFileNames.Add(finalPath);
+
+            return finalPath;
         }
 
         /**
@@ -945,7 +962,7 @@ namespace FSB_BANK_Extractor_CS_GUI
         }
 
         /**
-         * @brief Processes a single sub-sound, extracts audio data, and saves it as a WAV file.
+         * @brief Processes a single sub-sound, extracts audio data, and saves it as a WAV file, organizing by FMOD tags.
          *
          * @param fmodSystem The FMOD System object to use for FMOD API calls.
          * @param subSound The FMOD Sound object representing the sub-sound to process.
@@ -955,23 +972,40 @@ namespace FSB_BANK_Extractor_CS_GUI
          * @param verboseLogEnabled Flag indicating whether verbose logging is enabled.
          * @param logFile StreamWriter for logging messages.
          * @param subSoundIndex The index of the sub-sound being processed.
+         * @param usedFileNames A HashSet containing file paths already used in the current extraction session to prevent overwrites.
          * @return Task Represents the asynchronous operation.
          *
          * @details
          * This private asynchronous helper function orchestrates the processing of a single sub-sound.
-         * It logs the start of processing, seeks to the beginning of sub-sound data, retrieves sub-sound information using GetSoundInfo,
-         * generates the output file path using GetOutputFilePath, logs sub-sound information to the application log, and then creates the WAV file
-         * using CreateWavFile. It also includes error handling to catch exceptions during sub-sound processing and logs error messages.
-         * This function is the core logic for processing each individual sub-sound within an FSB file.
+         * It attempts to read a "language" tag from the sub-sound to create a subdirectory for organizational purposes.
+         * If a tag is found, it creates a corresponding folder. It then generates a unique output file path within the determined directory,
+         * logs sub-sound information, and creates the WAV file.
          */
-        private async Task ProcessSubSound(FMOD.System fmodSystem, FMOD.Sound subSound, int totalSubSounds, string baseFileName, string outputDirectoryPath, bool verboseLogEnabled, StreamWriter logFile, int subSoundIndex)
+        private async Task ProcessSubSound(FMOD.System fmodSystem, FMOD.Sound subSound, int totalSubSounds, string baseFileName, string outputDirectoryPath, bool verboseLogEnabled, StreamWriter logFile, int subSoundIndex, HashSet<string> usedFileNames)
         {
             LogProcessStart(subSoundIndex, totalSubSounds, logFile, verboseLogEnabled); // Log the start of sub-sound processing
             SeekSubSoundData(subSound, subSoundIndex, logFile, verboseLogEnabled); // Seek to the beginning of sub-sound data
 
             SoundInfo soundInfo = GetSoundInfo(subSound, subSoundIndex, verboseLogEnabled, logFile); // Get detailed information about the sub-sound
 
-            string fullOutputPath = GetOutputFilePath(outputDirectoryPath, baseFileName, soundInfo, subSoundIndex); // Get the full output file path for the WAV file
+            // Determine final output directory based on FMOD tag "language"
+            string finalOutputDirectory = outputDirectoryPath;
+            FMOD.TAG tag;
+            // Attempt to get the "language" tag. The index is 0 as we are looking for the first occurrence.
+            if (subSound.getTag("language", 0, out tag) == FMOD.RESULT.OK)
+            {
+                // Marshal the tag data (which is an IntPtr) to a string
+                string language = Marshal.PtrToStringAnsi(tag.data);
+                if (!string.IsNullOrEmpty(language))
+                {
+                    string languageFolder = Path.Combine(outputDirectoryPath, SanitizeFileName(language));
+                    // Create the subdirectory if it doesn't exist
+                    PrepareOutputDirectory(languageFolder);
+                    finalOutputDirectory = languageFolder;
+                }
+            }
+
+            string fullOutputPath = GetOutputFilePath(finalOutputDirectory, baseFileName, soundInfo, subSoundIndex, usedFileNames); // Get a unique output file path for the WAV file
 
             FSB_BANK_Extractor_CS_GUI.LogMessage($"\r\n Processing sub-sound {subSoundIndex + 1}/{totalSubSounds}:"); // Log message to application log indicating sub-sound processing start
             LogSubSoundInfo(soundInfo); // Log detailed information about the sub-sound to the application log
@@ -1352,6 +1386,7 @@ namespace FSB_BANK_Extractor_CS_GUI
          * It prepares the output directory, opens a log file (if verbose logging is enabled), and then iterates through
          * the FSB files (either the original input FSB or extracted FSBs from BANK) and processes each one using ProcessCurrentFile.
          * It updates the file status in the ListView, logs messages to the application log, and handles exceptions during file processing.
+         * A new HashSet is created for each file to track used output filenames and prevent overwrites.
          */
         private async Task ProcessFile(FMODSystem fmodSystem, string inputFilePath, string outputDirectoryPath, bool verboseLogEnabled, int fileIndex, int totalFiles)
         {
@@ -1363,6 +1398,7 @@ namespace FSB_BANK_Extractor_CS_GUI
 
             StreamWriter logFile = null; // Initialize StreamWriter for log file to null
             List<string> currentFileListToProcess = new List<string>(); // Initialize list to store file paths to process for the current input file
+            var usedFileNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // Tracks used output filenames for this file to prevent overwrites.
 
             try
             {
@@ -1372,7 +1408,7 @@ namespace FSB_BANK_Extractor_CS_GUI
 
                 foreach (string currentFilePath in currentFileListToProcess) // Iterate through each file path in the list to process
                 {
-                    await ProcessCurrentFile(fmodSystem, currentFilePath, outputDirectory, verboseLogEnabled, logFile, baseFileName, fileIndex, totalFiles); // Asynchronously process the current file
+                    await ProcessCurrentFile(fmodSystem, currentFilePath, outputDirectory, verboseLogEnabled, logFile, baseFileName, fileIndex, totalFiles, usedFileNames); // Asynchronously process the current file
                     DeleteTempFsbFile(currentFilePath); // Delete temporary FSB file if it was extracted from a BANK file
                 }
 
@@ -1406,6 +1442,7 @@ namespace FSB_BANK_Extractor_CS_GUI
          * @param baseFileName The base file name (stem of the input FSB file name).
          * @param fileIndex The index of the current file being processed in the batch.
          * @param totalFiles The total number of files in the batch.
+         * @param usedFileNames A HashSet containing file paths already used in the current extraction session to prevent overwrites.
          * @return Task Represents the asynchronous operation.
          *
          * @details
@@ -1414,7 +1451,7 @@ namespace FSB_BANK_Extractor_CS_GUI
          * and processes it using ProcessSubSound. It updates the combined progress label for each sub-sound processed.
          * If no sub-sounds are found in the FSB file, it calls HandleNoSubSounds to handle the case of empty FSB files.
          */
-        private async Task ProcessCurrentFile(FMODSystem fmodSystem, string currentFilePath, string outputDirectory, bool verboseLogEnabled, StreamWriter logFile, string baseFileName, int fileIndex, int totalFiles)
+        private async Task ProcessCurrentFile(FMODSystem fmodSystem, string currentFilePath, string outputDirectory, bool verboseLogEnabled, StreamWriter logFile, string baseFileName, int fileIndex, int totalFiles, HashSet<string> usedFileNames)
         {
             using (FMODSound soundWrapper = new FMODSound(fmodSystem.Get(), currentFilePath)) // Create and load FMOD sound from current file path in a using block for automatic disposal
             {
@@ -1430,7 +1467,7 @@ namespace FSB_BANK_Extractor_CS_GUI
                         FMOD.Sound subSound = GetSubSound(sound, subSoundIndex); // Get the FMOD sub-sound object for the current sub-sound index
                         if (subSound.hasHandle()) // Check if the subSound object has a valid handle
                         {
-                            await ProcessSubSound(fmodSystem.Get(), subSound, numSubSounds, baseFileName, outputDirectory, verboseLogEnabled, logFile, subSoundIndex); // Asynchronously process the sub-sound
+                            await ProcessSubSound(fmodSystem.Get(), subSound, numSubSounds, baseFileName, outputDirectory, verboseLogEnabled, logFile, subSoundIndex, usedFileNames); // Asynchronously process the sub-sound
                             subSound.clearHandle(); // Manually clear handle here, outside using block, as GetSubSound does not create a managed wrapper.
                         }
                         else // If subSound object does not have a valid handle
@@ -1939,8 +1976,8 @@ namespace FSB_BANK_Extractor_CS_GUI
         private void 정보ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show("FSB/BANK Extractor GUI\n\n\n" + // Display program name and newlines
-                            "Version: 1.0\n\n" + // Display version information and newlines
-                            "Developer: GitHub IZH318\n\n" + // Display developer information and newlines
+                            "Version: 1.1.0\n\n" + // Display version information and newlines
+                            "Developer: (GitHub) IZH318\n\n" + // Display developer information and newlines
                             "Using FMOD Studio API version 2.03.06\n" + // Display FMOD Studio API version information
                             " - Studio API minor release (build 149358)\n\n\n" + // Display FMOD Studio API build information and newlines
                             "© 2025 IZH318. All rights reserved.", "Program Information"); // Display copyright information and message box title

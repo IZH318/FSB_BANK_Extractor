@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("FSB/BANK to WAV Audio Extractor")]
 [assembly: AssemblyDescription("FSB/BANK to WAV Audio Extractor")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Github IZH318")]
+[assembly: AssemblyCompany("(Github) IZH318")]
 [assembly: AssemblyProduct("FSB/BANK Extractor CS (GUI)")]
-[assembly: AssemblyCopyright("Copyright (C) 2025 Github IZH318")]
+[assembly: AssemblyCopyright("Copyright (C) 2025 (Github) IZH318")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      빌드 번호
 //      수정 버전
 //
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
