@@ -4,67 +4,55 @@
 
 ===== [ 한국어 / Korean ] =====
 
-※ FSB_BANK_Extractor_CS_GUI.exe가 정상적으로 실행되지 않는다면, 먼저 닷 넷 4.8이 설치되어 있는지 확인해 주십시오. 닷 넷 4.8이 설치되어 있음에도 문제가 지속된다면, 아래의 FMOD DLL 파일 안내를 참고하여 주십시오.
+※ FSB_BANK_Extractor_CS_GUI.exe가 정상적으로 실행되지 않는다면, 먼저 .NET Framework 4.8이 설치되어 있는지 확인해 주십시오.
 
-본 프로그램은 FMOD 사운드 라이브러리를 사용합니다.
-프로그램이 정상적으로 실행되려면 fmod.dll 파일이 필요하며, 이 파일은 프로그램 실행 파일과 같은 위치에 있어야 합니다.
+본 프로그램은 배포된 ZIP 파일 내에 실행에 필요한 모든 파일(FMOD 라이브러리 등)이 포함되어 있습니다.
+압축을 풀고 파일들을 분리하지 않은 상태에서 실행해야 합니다.
 
-필수 DLL 파일:
-- fmod.dll (버전: 2.03.06 - Studio API minor release (build 149358))
+■ 필수 구성 파일 (ZIP 파일 포함 내역):
+- FSB_BANK_Extractor_CS_GUI.exe (실행 파일)
+- fmod.dll (필수 라이브러리)
+- fmodstudio.dll (필수 라이브러리)
 
-추가 DLL 파일 (오류 발생 시):
-- fmodL.dll (버전: 2.03.06 - Studio API minor release (build 149358))
-* `fmodL.dll` 파일은 `fmod.dll`로 실행되지 않을 때 추가적으로 필요할 수 있습니다. 두 파일을 함께 사용하는 경우 반드시 동일한 버전이어야 합니다.
+※ FMOD 버전 정보: 2.03.06 - Studio API minor release (build 149358)
 
 
 ● 사용 방법
 
-1. DLL 파일 준비:
-   - 프로그램과 함께 제공된 `fmod.dll` 파일을 확인하거나, 직접 FMOD Studio Windows API를 설치하여 dll 파일을 가져옵니다.
-   - `fmodL.dll` 파일은 `fmod.dll` 실행 시 오류가 발생할 때만 준비해주세요.
+1. 압축 풀기:
+   - 다운로드한 ZIP 파일의 압축을 원하시는 폴더에 풉니다.
 
-2. DLL 파일 복사:
-   - 준비한 `fmod.dll` 파일을 프로그램 실행 파일(.exe)과 같은 폴더에 복사합니다.
+2. 파일 확인:
+   - 압축이 풀린 폴더 안에 실행 파일(.exe)과 DLL 파일들(`fmod.dll`, `fmodstudio.dll`)이 모두 함께 있는지 확인합니다.
 
-   기본적인 파일 위치 예시:
-
-   [프로그램 폴더]
-   +-- 프로그램.exe
+   [올바른 폴더 구조 예시]
+   [폴더]
+   +-- FSB_BANK_Extractor_CS_GUI.exe
    +-- fmod.dll
-
-   - `fmod.dll`만으로 오류가 발생한다면, `fmodL.dll` 파일도 함께 복사해주세요.
-
-   오류 발생 시 파일 위치 예시:
-
-   [프로그램 폴더]
-   +-- 프로그램.exe
-   +-- fmod.dll
-   +-- fmodL.dll
+   +-- fmodstudio.dll
 
 3. 프로그램 실행:
-   - DLL 파일(`fmod.dll` 또는 `fmod.dll`과 `fmodL.dll`)이 프로그램 실행 파일과 같은 폴더에 있는지 확인하고 프로그램을 실행합니다.
+   - `FSB_BANK_Extractor_CS_GUI.exe`를 실행합니다.
 
 
-● 오류 발생 시 (DLL 파일 관련 문제 해결 방법)
+● 오류 발생 시 (실행이 안 될 경우)
 
-`fmod.dll` 파일을 프로그램과 같은 위치에 두었는데도 오류가 발생한다면, 다음 방법들을 시도해 보세요.
+1. 파일 위치 확인:
+   - 실행 파일(.exe)만 바탕화면 등으로 따로 꺼내면 실행되지 않습니다.
+   - 반드시 `fmod.dll` 및 `fmodstudio.dll` 파일이 실행 파일과 **같은 폴더**에 있어야 합니다.
 
-1. `fmodL.dll` 파일 추가:
-   - `fmodL.dll` 파일을 다운로드하여 `fmod.dll`과 마찬가지로 프로그램 실행 파일과 같은 위치에 복사합니다.
-   - `fmodL.dll` 파일은 반드시 `fmod.dll` 파일과 동일한 버전(2.03.06)이어야 합니다.
-   - `fmodL.dll` 파일을 추가한 후 프로그램을 다시 실행해 봅니다.
+2. .NET Framework 확인:
+   - 윈도우 기능 켜기/끄기 또는 마이크로소프트 홈페이지에서 .NET Framework 4.8이 설치되어 있는지 확인해 주세요.
 
-2. DLL 파일 버전 확인:
-   - `fmod.dll` (및 `fmodL.dll`을 추가했다면 `fmodL.dll`도) 파일이 모두 버전 2.03.06인지 확인합니다. 버전이 다르면 프로그램이 제대로 작동하지 않을 수 있습니다.
-
-3. DLL 파일 누락 확인:
-   - `fmod.dll` (및 `fmodL.dll`을 추가했다면 `fmodL.dll`도) 파일이 프로그램 실행 파일과 같은 폴더에 있는지 다시 한번 확인합니다.
+3. 윈도우 보안 차단 해제:
+   - 간혹 윈도우 보안 설정으로 인해 DLL 파일 로드가 차단될 수 있습니다.
+   - DLL 파일 우클릭 -> 속성 -> 하단 '차단 해제' 체크 후 적용해 보세요.
 
 
 ● 주의사항:
-- `fmod.dll` 파일 (그리고 `fmodL.dll` 파일을 추가했다면 `fmodL.dll` 파일 또한)은 프로그램 실행에 필수적인 파일입니다. 삭제하거나 다른 곳으로 옮기지 않도록 주의하세요.
-- DLL 파일 버전이 명시된 버전(2.03.06)과 일치하는지 확인해주세요. 버전이 맞지 않으면 호환성 문제가 발생할 수 있습니다.
-- `fmod.dll`과 `fmodL.dll`을 함께 사용하는 경우, 두 파일은 반드시 동일한 버전이어야 합니다. 버전이 다르면 오류가 발생할 수 있습니다.
+
+- 포함된 DLL 파일의 이름이나 확장자를 임의로 변경하지 마십시오.
+- DLL 파일들을 삭제하면 프로그램이 작동하지 않습니다.
 
 
 ● 이미지 출처
@@ -76,77 +64,56 @@
 
 
 
+===== [ English ] =====
 
+※ If FSB_BANK_Extractor_CS_GUI.exe does not launch correctly, please check if .NET Framework 4.8 is installed first.
 
-===== [ English / 영어 ] =====
+This program comes as a ZIP package containing all necessary files (including FMOD libraries) required for execution.
+Please extract the archive and run the program without separating the files.
 
-※ If Program1.exe does not run correctly, please first check if .NET Framework 4.8 is installed. If the issue persists even after .NET Framework 4.8 is installed, please refer to the FMOD DLL File Guide below.
+■ Included Files (Do Not Delete):
+- FSB_BANK_Extractor_CS_GUI.exe (Executable)
+- fmod.dll (Required Library)
+- fmodstudio.dll (Required Library)
 
-This program uses the FMOD sound library.
-For the program to run correctly, the fmod.dll file is required and must be located in the same directory as the program executable.
-
-Required DLL File:
-- fmod.dll (Version: 2.03.06 - Studio API minor release (build 149358))
-
-Additional DLL File (If Errors Occur):
-- fmodL.dll (Version: 2.03.06 - Studio API minor release (build 149358))
-* The `fmodL.dll` file may be additionally required if the program does not run with `fmod.dll`. If using both files, they must be the same version.
+※ FMOD Version: 2.03.06 - Studio API minor release (build 149358)
 
 
 ● How to Use
 
-1. Prepare DLL Files:
-   - Check for the `fmod.dll` file provided with the program, or directly install FMOD Studio Windows API to get the dll file.
-   - Only prepare the `fmodL.dll` file if errors occur when running with `fmod.dll`.
+1. Extract the ZIP:
+   - Extract the downloaded ZIP file to a folder of your choice.
 
-2. Copy DLL Files:
-   - Copy the prepared `fmod.dll` file to the same folder as the program executable (.exe) file.
+2. Verify Files:
+   - Ensure that the executable (.exe) and the DLL files (`fmod.dll`, `fmodstudio.dll`) are located in the SAME folder.
 
-   Basic File Location Example:
-
-   [Program Folder]
-   +-- Program.exe
+   [Correct Folder Structure]
+   [Folder]
+   +-- FSB_BANK_Extractor_CS_GUI.exe
    +-- fmod.dll
-
-   - If errors occur with only `fmod.dll`, copy the `fmodL.dll` file as well.
-
-   File Location Example in Case of Errors:
-
-   [Program Folder]
-   +-- Program.exe
-   +-- fmod.dll
-   +-- fmodL.dll
+   +-- fmodstudio.dll
 
 3. Run the Program:
-   - Ensure that the DLL file(s) (`fmod.dll` or `fmod.dll` and `fmodL.dll`) are in the same folder as the program executable, and then run the program.
+   - Launch `FSB_BANK_Extractor_CS_GUI.exe`.
 
 
-● Troubleshooting (DLL File Related Issues)
+● Troubleshooting
 
-If errors occur even after placing the `fmod.dll` file in the same location as the program, try the following methods:
+1. Check File Location:
+   - Do NOT move the .exe file alone to the Desktop or another location.
+   - It must remain in the same folder as `fmod.dll` and `fmodstudio.dll`.
 
-1. Add `fmodL.dll` File:
-   - Download the `fmodL.dll` file and copy it to the same location as the program executable, just like `fmod.dll`.
-   - The `fmodL.dll` file must be the same version (2.03.06) as the `fmod.dll` file.
-   - After adding the `fmodL.dll` file, try running the program again.
+2. Check .NET Framework:
+   - Ensure .NET Framework 4.8 is installed on your system.
 
-2. Check DLL File Versions:
-   - Verify that the versions of both `fmod.dll` (and `fmodL.dll` if added) files are version 2.03.06. If the versions are different, the program may not function correctly.
-
-3. Check for Missing DLL Files:
-   - Double-check that the `fmod.dll` (and `fmodL.dll` if added) files are in the same folder as the program executable.
+3. Unblock Files:
+   - Sometimes Windows Security blocks downloaded DLL files.
+   - Right-click the DLL files -> Properties -> Check 'Unblock' at the bottom -> Apply.
 
 
-● Important Notes:
-
-- The `fmod.dll` file (and the `fmodL.dll` file if added) is essential for program execution. Be careful not to delete or move it to another location.
-- Please ensure that the DLL file versions match the specified version (2.03.06). Incompatible versions may cause problems.
-- When using both `fmod.dll` and `fmodL.dll` files together, both files must be the same version. Version mismatch can lead to errors.
-
-
-● Image Attribution
+● Credits
 
 - Icon Name: Unboxing icons
-- Creator: Graphix's Art
-- Provider: Flaticon
+- Author: Graphix's Art
+- Source: Flaticon
 - URL: https://www.flaticon.com/free-icons/unboxing

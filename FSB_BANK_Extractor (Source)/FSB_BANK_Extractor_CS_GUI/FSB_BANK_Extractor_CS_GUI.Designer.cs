@@ -1,361 +1,628 @@
-﻿// Form1.Designer.cs
-namespace FSB_BANK_Extractor_CS_GUI
+﻿namespace FSB_BANK_Extractor_CS_GUI
 {
     partial class FSB_BANK_Extractor_CS_GUI
     {
-        /// <summary>
-        /// 필수 디자이너 변수입니다.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// 사용 중인 모든 리소스를 정리합니다.
-        /// </summary>
-        /// <param name="disposing">관리되는 리소스를 삭제해야 하면 true이고, 그렇지 않으면 false입니다.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
+            if (disposing && (components != null)) components.Dispose();
             base.Dispose(disposing);
         }
 
-        #region Windows Form 디자이너에서 생성한 코드
+        #region Windows Form Designer generated code
 
-        /// <summary>
-        /// 디자이너 지원에 필요한 메서드입니다.
-        /// 이 메서드의 내용을 코드 편집기로 수정하지 마십시오.
-        /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FSB_BANK_Extractor_CS_GUI));
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabelProgress = new System.Windows.Forms.ToolStripStatusLabel();
-            this.groupBoxOutputDir = new System.Windows.Forms.GroupBox();
-            this.radioButtonOutputDirCustom = new System.Windows.Forms.RadioButton();
-            this.buttonOutputDirBrowse = new System.Windows.Forms.Button();
-            this.textBoxOutputDirPath = new System.Windows.Forms.TextBox();
-            this.radioButtonOutputDirExe = new System.Windows.Forms.RadioButton();
-            this.radioButtonOutputDirRes = new System.Windows.Forms.RadioButton();
-            this.checkBoxVerboseLog = new System.Windows.Forms.CheckBox();
-            this.textBoxLog = new System.Windows.Forms.TextBox();
-            this.listViewFiles = new System.Windows.Forms.ListView();
-            this.columnHeaderFileName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeaderStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.buttonAddFiles = new System.Windows.Forms.Button();
-            this.buttonAddFolder = new System.Windows.Forms.Button();
-            this.buttonRemoveSelectedFiles = new System.Windows.Forms.Button();
-            this.buttonClearFileList = new System.Windows.Forms.Button();
-            this.buttonBatchExtract = new System.Windows.Forms.Button();
-            this.toolStripStatusLabelSubSound = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabelFile = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.메뉴ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.도움말ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.정보ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.extractCheckedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.extractAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportCsvToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.끝내기ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.statusStrip1.SuspendLayout();
-            this.groupBoxOutputDir.SuspendLayout();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.collapseAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.progressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.lblElapsedTime = new System.Windows.Forms.ToolStripStatusLabel();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.groupBoxTree = new System.Windows.Forms.GroupBox();
+            this.lvSearchResults = new System.Windows.Forms.ListView();
+            this.colName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colPath = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.treeViewContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.playContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stopContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.extractContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.copyNameContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.copyPathContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.copyGuidContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.treeViewInfo = new System.Windows.Forms.TreeView();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.panelSearch = new System.Windows.Forms.Panel();
+            this.txtSearch = new System.Windows.Forms.TextBox();
+            this.labelSearch = new System.Windows.Forms.Label();
+            this.groupBoxDetails = new System.Windows.Forms.GroupBox();
+            this.listViewDetails = new System.Windows.Forms.ListView();
+            this.colCategory = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colProperty = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colValue = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.panelPlayback = new System.Windows.Forms.Panel();
+            this.btnPlay = new System.Windows.Forms.Button();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.trackSeek = new System.Windows.Forms.TrackBar();
+            this.lblTime = new System.Windows.Forms.Label();
+            this.lblVol = new System.Windows.Forms.Label();
+            this.trackVol = new System.Windows.Forms.TrackBar();
+            this.chkAutoPlay = new System.Windows.Forms.CheckBox();
+            this.chkLoop = new System.Windows.Forms.CheckBox();
+            this.chkVerboseLog = new System.Windows.Forms.CheckBox();
+            this.labelOptions = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            this.groupBoxTree.SuspendLayout();
+            this.treeViewContextMenu.SuspendLayout();
+            this.panelSearch.SuspendLayout();
+            this.groupBoxDetails.SuspendLayout();
+            this.panelPlayback.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackSeek)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackVol)).BeginInit();
             this.SuspendLayout();
-            // 
-            // statusStrip1
-            // 
-            this.statusStrip1.AllowMerge = false;
-            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabelProgress});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 532);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 12, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(539, 22);
-            this.statusStrip1.SizingGrip = false;
-            this.statusStrip1.TabIndex = 17;
-            this.statusStrip1.Text = "statusStrip1";
-            // 
-            // toolStripStatusLabelProgress
-            // 
-            this.toolStripStatusLabelProgress.Name = "toolStripStatusLabelProgress";
-            this.toolStripStatusLabelProgress.Size = new System.Drawing.Size(526, 17);
-            this.toolStripStatusLabelProgress.Spring = true;
-            this.toolStripStatusLabelProgress.Text = "Idle";
-            this.toolStripStatusLabelProgress.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // groupBoxOutputDir
-            // 
-            this.groupBoxOutputDir.Controls.Add(this.radioButtonOutputDirCustom);
-            this.groupBoxOutputDir.Controls.Add(this.buttonOutputDirBrowse);
-            this.groupBoxOutputDir.Controls.Add(this.textBoxOutputDirPath);
-            this.groupBoxOutputDir.Controls.Add(this.radioButtonOutputDirExe);
-            this.groupBoxOutputDir.Controls.Add(this.radioButtonOutputDirRes);
-            this.groupBoxOutputDir.Controls.Add(this.checkBoxVerboseLog);
-            this.groupBoxOutputDir.Location = new System.Drawing.Point(12, 226);
-            this.groupBoxOutputDir.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBoxOutputDir.Name = "groupBoxOutputDir";
-            this.groupBoxOutputDir.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBoxOutputDir.Size = new System.Drawing.Size(515, 84);
-            this.groupBoxOutputDir.TabIndex = 3;
-            this.groupBoxOutputDir.TabStop = false;
-            this.groupBoxOutputDir.Text = "Output Options";
-            // 
-            // radioButtonOutputDirCustom
-            // 
-            this.radioButtonOutputDirCustom.AutoSize = true;
-            this.radioButtonOutputDirCustom.Location = new System.Drawing.Point(6, 58);
-            this.radioButtonOutputDirCustom.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.radioButtonOutputDirCustom.Name = "radioButtonOutputDirCustom";
-            this.radioButtonOutputDirCustom.Size = new System.Drawing.Size(137, 16);
-            this.radioButtonOutputDirCustom.TabIndex = 4;
-            this.radioButtonOutputDirCustom.Text = "Custom output path:";
-            this.radioButtonOutputDirCustom.UseVisualStyleBackColor = true;
-            this.radioButtonOutputDirCustom.CheckedChanged += new System.EventHandler(this.RadioButton_OutputDirCustom_CheckedChanged);
-            // 
-            // buttonOutputDirBrowse
-            // 
-            this.buttonOutputDirBrowse.Enabled = false;
-            this.buttonOutputDirBrowse.Location = new System.Drawing.Point(409, 55);
-            this.buttonOutputDirBrowse.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonOutputDirBrowse.Name = "buttonOutputDirBrowse";
-            this.buttonOutputDirBrowse.Size = new System.Drawing.Size(100, 22);
-            this.buttonOutputDirBrowse.TabIndex = 6;
-            this.buttonOutputDirBrowse.Text = "Browse";
-            this.buttonOutputDirBrowse.UseVisualStyleBackColor = true;
-            this.buttonOutputDirBrowse.Click += new System.EventHandler(this.Button_OutputDirBrowse_Click);
-            // 
-            // textBoxOutputDirPath
-            // 
-            this.textBoxOutputDirPath.Enabled = false;
-            this.textBoxOutputDirPath.Location = new System.Drawing.Point(149, 55);
-            this.textBoxOutputDirPath.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.textBoxOutputDirPath.Name = "textBoxOutputDirPath";
-            this.textBoxOutputDirPath.ReadOnly = true;
-            this.textBoxOutputDirPath.Size = new System.Drawing.Size(254, 21);
-            this.textBoxOutputDirPath.TabIndex = 5;
-            // 
-            // radioButtonOutputDirExe
-            // 
-            this.radioButtonOutputDirExe.AutoSize = true;
-            this.radioButtonOutputDirExe.Location = new System.Drawing.Point(6, 38);
-            this.radioButtonOutputDirExe.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.radioButtonOutputDirExe.Name = "radioButtonOutputDirExe";
-            this.radioButtonOutputDirExe.Size = new System.Drawing.Size(153, 16);
-            this.radioButtonOutputDirExe.TabIndex = 1;
-            this.radioButtonOutputDirExe.Text = "Same path as program";
-            this.radioButtonOutputDirExe.UseVisualStyleBackColor = true;
-            // 
-            // radioButtonOutputDirRes
-            // 
-            this.radioButtonOutputDirRes.AutoSize = true;
-            this.radioButtonOutputDirRes.Checked = true;
-            this.radioButtonOutputDirRes.Location = new System.Drawing.Point(6, 18);
-            this.radioButtonOutputDirRes.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.radioButtonOutputDirRes.Name = "radioButtonOutputDirRes";
-            this.radioButtonOutputDirRes.Size = new System.Drawing.Size(176, 16);
-            this.radioButtonOutputDirRes.TabIndex = 0;
-            this.radioButtonOutputDirRes.TabStop = true;
-            this.radioButtonOutputDirRes.Text = "Same path as resource file";
-            this.radioButtonOutputDirRes.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxVerboseLog
-            // 
-            this.checkBoxVerboseLog.AutoSize = true;
-            this.checkBoxVerboseLog.Location = new System.Drawing.Point(370, 19);
-            this.checkBoxVerboseLog.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.checkBoxVerboseLog.Name = "checkBoxVerboseLog";
-            this.checkBoxVerboseLog.Size = new System.Drawing.Size(128, 16);
-            this.checkBoxVerboseLog.TabIndex = 4;
-            this.checkBoxVerboseLog.Text = "Verbose Log Save";
-            this.checkBoxVerboseLog.UseVisualStyleBackColor = true;
-            // 
-            // textBoxLog
-            // 
-            this.textBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxLog.Location = new System.Drawing.Point(12, 370);
-            this.textBoxLog.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.textBoxLog.Multiline = true;
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.ReadOnly = true;
-            this.textBoxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxLog.Size = new System.Drawing.Size(515, 150);
-            this.textBoxLog.TabIndex = 6;
-            // 
-            // listViewFiles
-            // 
-            this.listViewFiles.AllowDrop = true;
-            this.listViewFiles.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderFileName,
-            this.columnHeaderStatus});
-            this.listViewFiles.FullRowSelect = true;
-            this.listViewFiles.HideSelection = false;
-            this.listViewFiles.Location = new System.Drawing.Point(12, 36);
-            this.listViewFiles.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.listViewFiles.MultiSelect = false;
-            this.listViewFiles.Name = "listViewFiles";
-            this.listViewFiles.Size = new System.Drawing.Size(515, 150);
-            this.listViewFiles.TabIndex = 7;
-            this.listViewFiles.UseCompatibleStateImageBehavior = false;
-            this.listViewFiles.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeaderFileName
-            // 
-            this.columnHeaderFileName.Text = "File Name";
-            this.columnHeaderFileName.Width = 350;
-            // 
-            // columnHeaderStatus
-            // 
-            this.columnHeaderStatus.Text = "Status";
-            this.columnHeaderStatus.Width = 100;
-            // 
-            // buttonAddFiles
-            // 
-            this.buttonAddFiles.Location = new System.Drawing.Point(12, 190);
-            this.buttonAddFiles.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonAddFiles.Name = "buttonAddFiles";
-            this.buttonAddFiles.Size = new System.Drawing.Size(100, 22);
-            this.buttonAddFiles.TabIndex = 8;
-            this.buttonAddFiles.Text = "Add Files";
-            this.buttonAddFiles.UseVisualStyleBackColor = true;
-            this.buttonAddFiles.Click += new System.EventHandler(this.Button_AddFiles_Click);
-            // 
-            // buttonAddFolder
-            // 
-            this.buttonAddFolder.Location = new System.Drawing.Point(118, 190);
-            this.buttonAddFolder.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonAddFolder.Name = "buttonAddFolder";
-            this.buttonAddFolder.Size = new System.Drawing.Size(100, 22);
-            this.buttonAddFolder.TabIndex = 9;
-            this.buttonAddFolder.Text = "Add Folder";
-            this.buttonAddFolder.UseVisualStyleBackColor = true;
-            this.buttonAddFolder.Click += new System.EventHandler(this.Button_AddFolder_Click);
-            // 
-            // buttonRemoveSelectedFiles
-            // 
-            this.buttonRemoveSelectedFiles.Location = new System.Drawing.Point(321, 190);
-            this.buttonRemoveSelectedFiles.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonRemoveSelectedFiles.Name = "buttonRemoveSelectedFiles";
-            this.buttonRemoveSelectedFiles.Size = new System.Drawing.Size(100, 22);
-            this.buttonRemoveSelectedFiles.TabIndex = 10;
-            this.buttonRemoveSelectedFiles.Text = "Remove Selected";
-            this.buttonRemoveSelectedFiles.UseVisualStyleBackColor = true;
-            this.buttonRemoveSelectedFiles.Click += new System.EventHandler(this.Button_RemoveSelectedFiles_Click);
-            // 
-            // buttonClearFileList
-            // 
-            this.buttonClearFileList.Location = new System.Drawing.Point(427, 190);
-            this.buttonClearFileList.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonClearFileList.Name = "buttonClearFileList";
-            this.buttonClearFileList.Size = new System.Drawing.Size(100, 22);
-            this.buttonClearFileList.TabIndex = 11;
-            this.buttonClearFileList.Text = "Clear File List";
-            this.buttonClearFileList.UseVisualStyleBackColor = true;
-            this.buttonClearFileList.Click += new System.EventHandler(this.Button_ClearFileList_Click);
-            // 
-            // buttonBatchExtract
-            // 
-            this.buttonBatchExtract.Location = new System.Drawing.Point(12, 324);
-            this.buttonBatchExtract.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.buttonBatchExtract.Name = "buttonBatchExtract";
-            this.buttonBatchExtract.Size = new System.Drawing.Size(515, 32);
-            this.buttonBatchExtract.TabIndex = 12;
-            this.buttonBatchExtract.Text = "Start Batch Extract";
-            this.buttonBatchExtract.UseVisualStyleBackColor = true;
-            this.buttonBatchExtract.Click += new System.EventHandler(this.Button_BatchExtract_Click);
-            // 
-            // toolStripStatusLabelSubSound
-            // 
-            this.toolStripStatusLabelSubSound.Name = "toolStripStatusLabelSubSound";
-            this.toolStripStatusLabelSubSound.Size = new System.Drawing.Size(0, 17);
-            this.toolStripStatusLabelSubSound.Text = "toolStripStatusLabelSubSound";
-            this.toolStripStatusLabelSubSound.Visible = false;
-            // 
-            // toolStripStatusLabelFile
-            // 
-            this.toolStripStatusLabelFile.Name = "toolStripStatusLabelFile";
-            this.toolStripStatusLabelFile.Size = new System.Drawing.Size(0, 17);
-            this.toolStripStatusLabelFile.Text = "toolStripStatusLabelFile";
-            this.toolStripStatusLabelFile.Visible = false;
             // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.메뉴ToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.viewToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(539, 24);
-            this.menuStrip1.TabIndex = 18;
+            this.menuStrip1.Size = new System.Drawing.Size(784, 24);
+            this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
-            // 메뉴ToolStripMenuItem
+            // fileToolStripMenuItem
             // 
-            this.메뉴ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.도움말ToolStripMenuItem,
-            this.정보ToolStripMenuItem,
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openFileToolStripMenuItem,
+            this.openFolderToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.extractCheckedToolStripMenuItem,
+            this.extractAllToolStripMenuItem,
+            this.exportCsvToolStripMenuItem,
             this.toolStripSeparator1,
-            this.끝내기ToolStripMenuItem});
-            this.메뉴ToolStripMenuItem.Name = "메뉴ToolStripMenuItem";
-            this.메뉴ToolStripMenuItem.Size = new System.Drawing.Size(82, 20);
-            this.메뉴ToolStripMenuItem.Text = "메뉴(Menu)";
+            this.exitToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Text = "&File";
             // 
-            // 도움말ToolStripMenuItem
+            // openFileToolStripMenuItem
             // 
-            this.도움말ToolStripMenuItem.Name = "도움말ToolStripMenuItem";
-            this.도움말ToolStripMenuItem.Size = new System.Drawing.Size(143, 22);
-            this.도움말ToolStripMenuItem.Text = "도움말(Help)";
-            this.도움말ToolStripMenuItem.Click += new System.EventHandler(this.도움말ToolStripMenuItem_Click);
+            this.openFileToolStripMenuItem.Name = "openFileToolStripMenuItem";
+            this.openFileToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+            this.openFileToolStripMenuItem.Size = new System.Drawing.Size(256, 22);
+            this.openFileToolStripMenuItem.Text = "&Open File...";
+            this.openFileToolStripMenuItem.Click += new System.EventHandler(this.openFileToolStripMenuItem_Click);
             // 
-            // 정보ToolStripMenuItem
+            // openFolderToolStripMenuItem
             // 
-            this.정보ToolStripMenuItem.Name = "정보ToolStripMenuItem";
-            this.정보ToolStripMenuItem.Size = new System.Drawing.Size(143, 22);
-            this.정보ToolStripMenuItem.Text = "정보(About)";
-            this.정보ToolStripMenuItem.Click += new System.EventHandler(this.정보ToolStripMenuItem_Click);
+            this.openFolderToolStripMenuItem.Name = "openFolderToolStripMenuItem";
+            this.openFolderToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.O)));
+            this.openFolderToolStripMenuItem.Size = new System.Drawing.Size(256, 22);
+            this.openFolderToolStripMenuItem.Text = "Open F&older...";
+            this.openFolderToolStripMenuItem.Click += new System.EventHandler(this.openFolderToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(253, 6);
+            // 
+            // extractCheckedToolStripMenuItem
+            // 
+            this.extractCheckedToolStripMenuItem.Name = "extractCheckedToolStripMenuItem";
+            this.extractCheckedToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E)));
+            this.extractCheckedToolStripMenuItem.Size = new System.Drawing.Size(256, 22);
+            this.extractCheckedToolStripMenuItem.Text = "E&xtract Checked...";
+            this.extractCheckedToolStripMenuItem.Click += new System.EventHandler(this.extractCheckedToolStripMenuItem_Click);
+            // 
+            // extractAllToolStripMenuItem
+            // 
+            this.extractAllToolStripMenuItem.Name = "extractAllToolStripMenuItem";
+            this.extractAllToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.E)));
+            this.extractAllToolStripMenuItem.Size = new System.Drawing.Size(256, 22);
+            this.extractAllToolStripMenuItem.Text = "Extract &All...";
+            this.extractAllToolStripMenuItem.Click += new System.EventHandler(this.extractAllToolStripMenuItem_Click);
+            // 
+            // exportCsvToolStripMenuItem
+            // 
+            this.exportCsvToolStripMenuItem.Name = "exportCsvToolStripMenuItem";
+            this.exportCsvToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.C)));
+            this.exportCsvToolStripMenuItem.Size = new System.Drawing.Size(256, 22);
+            this.exportCsvToolStripMenuItem.Text = "Export List to &CSV...";
+            this.exportCsvToolStripMenuItem.Click += new System.EventHandler(this.exportCsvToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(140, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(253, 6);
             // 
-            // 끝내기ToolStripMenuItem
+            // exitToolStripMenuItem
             // 
-            this.끝내기ToolStripMenuItem.Name = "끝내기ToolStripMenuItem";
-            this.끝내기ToolStripMenuItem.Size = new System.Drawing.Size(143, 22);
-            this.끝내기ToolStripMenuItem.Text = "끝내기(Exit)";
-            this.끝내기ToolStripMenuItem.Click += new System.EventHandler(this.끝내기ToolStripMenuItem_Click);
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(256, 22);
+            this.exitToolStripMenuItem.Text = "E&xit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // viewToolStripMenuItem
+            // 
+            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.expandAllToolStripMenuItem,
+            this.collapseAllToolStripMenuItem});
+            this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(45, 20);
+            this.viewToolStripMenuItem.Text = "&View";
+            // 
+            // expandAllToolStripMenuItem
+            // 
+            this.expandAllToolStripMenuItem.Name = "expandAllToolStripMenuItem";
+            this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.expandAllToolStripMenuItem.Text = "&Expand All";
+            this.expandAllToolStripMenuItem.Click += new System.EventHandler(this.expandAllToolStripMenuItem_Click);
+            // 
+            // collapseAllToolStripMenuItem
+            // 
+            this.collapseAllToolStripMenuItem.Name = "collapseAllToolStripMenuItem";
+            this.collapseAllToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.collapseAllToolStripMenuItem.Text = "&Collapse All";
+            this.collapseAllToolStripMenuItem.Click += new System.EventHandler(this.collapseAllToolStripMenuItem_Click);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblStatus,
+            this.progressBar,
+            this.lblElapsedTime});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 537);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(784, 24);
+            this.statusStrip1.TabIndex = 1;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lblStatus
+            // 
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(561, 19);
+            this.lblStatus.Spring = true;
+            this.lblStatus.Text = "Ready.";
+            this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // progressBar
+            // 
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(100, 18);
+            // 
+            // lblElapsedTime
+            // 
+            this.lblElapsedTime.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.lblElapsedTime.Name = "lblElapsedTime";
+            this.lblElapsedTime.Size = new System.Drawing.Size(106, 19);
+            this.lblElapsedTime.Text = "Elapsed: 00:00.00";
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 24);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.groupBoxTree);
+            this.splitContainer1.Panel1.Controls.Add(this.panelSearch);
+            this.splitContainer1.Panel1.Padding = new System.Windows.Forms.Padding(5);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.groupBoxDetails);
+            this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(5);
+            this.splitContainer1.Size = new System.Drawing.Size(784, 433);
+            this.splitContainer1.SplitterDistance = 239;
+            this.splitContainer1.TabIndex = 2;
+            // 
+            // groupBoxTree
+            // 
+            this.groupBoxTree.Controls.Add(this.lvSearchResults);
+            this.groupBoxTree.Controls.Add(this.treeViewInfo);
+            this.groupBoxTree.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxTree.Location = new System.Drawing.Point(5, 40);
+            this.groupBoxTree.Name = "groupBoxTree";
+            this.groupBoxTree.Size = new System.Drawing.Size(229, 388);
+            this.groupBoxTree.TabIndex = 1;
+            this.groupBoxTree.TabStop = false;
+            this.groupBoxTree.Text = "Structure Explorer";
+            // 
+            // lvSearchResults
+            // 
+            this.lvSearchResults.CheckBoxes = true;
+            this.lvSearchResults.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.colName,
+            this.colType,
+            this.colPath});
+            this.lvSearchResults.ContextMenuStrip = this.treeViewContextMenu;
+            this.lvSearchResults.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lvSearchResults.Font = new System.Drawing.Font("Segoe UI", 9.75F);
+            this.lvSearchResults.FullRowSelect = true;
+            this.lvSearchResults.GridLines = true;
+            this.lvSearchResults.HideSelection = false;
+            this.lvSearchResults.Location = new System.Drawing.Point(3, 17);
+            this.lvSearchResults.MultiSelect = false;
+            this.lvSearchResults.Name = "lvSearchResults";
+            this.lvSearchResults.Size = new System.Drawing.Size(223, 368);
+            this.lvSearchResults.TabIndex = 1;
+            this.lvSearchResults.UseCompatibleStateImageBehavior = false;
+            this.lvSearchResults.View = System.Windows.Forms.View.Details;
+            this.lvSearchResults.Visible = false;
+            // 
+            // colName
+            // 
+            this.colName.Text = "Name";
+            this.colName.Width = 120;
+            // 
+            // colType
+            // 
+            this.colType.Text = "Type";
+            this.colType.Width = 50;
+            // 
+            // colPath
+            // 
+            this.colPath.Text = "Path";
+            this.colPath.Width = 100;
+            // 
+            // treeViewContextMenu
+            // 
+            this.treeViewContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.playContextMenuItem,
+            this.stopContextMenuItem,
+            this.toolStripSeparator3,
+            this.extractContextMenuItem,
+            this.toolStripSeparator4,
+            this.copyNameContextMenuItem,
+            this.copyPathContextMenuItem,
+            this.copyGuidContextMenuItem});
+            this.treeViewContextMenu.Name = "treeViewContextMenu";
+            this.treeViewContextMenu.Size = new System.Drawing.Size(173, 148);
+            // 
+            // playContextMenuItem
+            // 
+            this.playContextMenuItem.Name = "playContextMenuItem";
+            this.playContextMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.playContextMenuItem.Text = "Play / Pause";
+            this.playContextMenuItem.Click += new System.EventHandler(this.playContextMenuItem_Click);
+            // 
+            // stopContextMenuItem
+            // 
+            this.stopContextMenuItem.Name = "stopContextMenuItem";
+            this.stopContextMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.stopContextMenuItem.Text = "Stop";
+            this.stopContextMenuItem.Click += new System.EventHandler(this.stopContextMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(169, 6);
+            // 
+            // extractContextMenuItem
+            // 
+            this.extractContextMenuItem.Name = "extractContextMenuItem";
+            this.extractContextMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.extractContextMenuItem.Text = "Extract This Item...";
+            this.extractContextMenuItem.Click += new System.EventHandler(this.extractContextMenuItem_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(169, 6);
+            // 
+            // copyNameContextMenuItem
+            // 
+            this.copyNameContextMenuItem.Name = "copyNameContextMenuItem";
+            this.copyNameContextMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.copyNameContextMenuItem.Text = "Copy Name";
+            this.copyNameContextMenuItem.Click += new System.EventHandler(this.copyNameContextMenuItem_Click);
+            // 
+            // copyPathContextMenuItem
+            // 
+            this.copyPathContextMenuItem.Name = "copyPathContextMenuItem";
+            this.copyPathContextMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.copyPathContextMenuItem.Text = "Copy Path";
+            this.copyPathContextMenuItem.Click += new System.EventHandler(this.copyPathContextMenuItem_Click);
+            // 
+            // copyGuidContextMenuItem
+            // 
+            this.copyGuidContextMenuItem.Name = "copyGuidContextMenuItem";
+            this.copyGuidContextMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.copyGuidContextMenuItem.Text = "Copy GUID";
+            this.copyGuidContextMenuItem.Click += new System.EventHandler(this.copyGuidContextMenuItem_Click);
+            // 
+            // treeViewInfo
+            // 
+            this.treeViewInfo.CheckBoxes = true;
+            this.treeViewInfo.ContextMenuStrip = this.treeViewContextMenu;
+            this.treeViewInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.treeViewInfo.Font = new System.Drawing.Font("Segoe UI", 9.75F);
+            this.treeViewInfo.ImageIndex = 0;
+            this.treeViewInfo.ImageList = this.imageList1;
+            this.treeViewInfo.Location = new System.Drawing.Point(3, 17);
+            this.treeViewInfo.Name = "treeViewInfo";
+            this.treeViewInfo.SelectedImageIndex = 0;
+            this.treeViewInfo.Size = new System.Drawing.Size(223, 368);
+            this.treeViewInfo.TabIndex = 0;
+            this.treeViewInfo.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewInfo_AfterSelect);
+            this.treeViewInfo.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeViewInfo_NodeMouseClick);
+            this.treeViewInfo.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeViewInfo_NodeMouseDoubleClick);
+            // 
+            // imageList1
+            // 
+            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
+            this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            // 
+            // panelSearch
+            // 
+            this.panelSearch.Controls.Add(this.txtSearch);
+            this.panelSearch.Controls.Add(this.labelSearch);
+            this.panelSearch.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelSearch.Location = new System.Drawing.Point(5, 5);
+            this.panelSearch.Name = "panelSearch";
+            this.panelSearch.Size = new System.Drawing.Size(229, 35);
+            this.panelSearch.TabIndex = 0;
+            // 
+            // txtSearch
+            // 
+            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSearch.Location = new System.Drawing.Point(60, 7);
+            this.txtSearch.Name = "txtSearch";
+            this.txtSearch.Size = new System.Drawing.Size(164, 21);
+            this.txtSearch.TabIndex = 1;
+            this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
+            // 
+            // labelSearch
+            // 
+            this.labelSearch.AutoSize = true;
+            this.labelSearch.Location = new System.Drawing.Point(8, 11);
+            this.labelSearch.Name = "labelSearch";
+            this.labelSearch.Size = new System.Drawing.Size(49, 12);
+            this.labelSearch.TabIndex = 0;
+            this.labelSearch.Text = "Search:";
+            // 
+            // groupBoxDetails
+            // 
+            this.groupBoxDetails.Controls.Add(this.listViewDetails);
+            this.groupBoxDetails.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxDetails.Location = new System.Drawing.Point(5, 5);
+            this.groupBoxDetails.Name = "groupBoxDetails";
+            this.groupBoxDetails.Size = new System.Drawing.Size(531, 423);
+            this.groupBoxDetails.TabIndex = 0;
+            this.groupBoxDetails.TabStop = false;
+            this.groupBoxDetails.Text = "Details";
+            // 
+            // listViewDetails
+            // 
+            this.listViewDetails.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.colCategory,
+            this.colProperty,
+            this.colValue});
+            this.listViewDetails.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listViewDetails.Font = new System.Drawing.Font("Segoe UI", 9.75F);
+            this.listViewDetails.FullRowSelect = true;
+            this.listViewDetails.GridLines = true;
+            this.listViewDetails.HideSelection = false;
+            this.listViewDetails.Location = new System.Drawing.Point(3, 17);
+            this.listViewDetails.Name = "listViewDetails";
+            this.listViewDetails.Size = new System.Drawing.Size(525, 403);
+            this.listViewDetails.TabIndex = 0;
+            this.listViewDetails.UseCompatibleStateImageBehavior = false;
+            this.listViewDetails.View = System.Windows.Forms.View.Details;
+            // 
+            // colCategory
+            // 
+            this.colCategory.Text = "Category";
+            this.colCategory.Width = 120;
+            // 
+            // colProperty
+            // 
+            this.colProperty.Text = "Property";
+            this.colProperty.Width = 200;
+            // 
+            // colValue
+            // 
+            this.colValue.Text = "Value";
+            this.colValue.Width = 300;
+            // 
+            // panelPlayback
+            // 
+            this.panelPlayback.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.panelPlayback.Controls.Add(this.btnPlay);
+            this.panelPlayback.Controls.Add(this.btnStop);
+            this.panelPlayback.Controls.Add(this.trackSeek);
+            this.panelPlayback.Controls.Add(this.lblTime);
+            this.panelPlayback.Controls.Add(this.lblVol);
+            this.panelPlayback.Controls.Add(this.trackVol);
+            this.panelPlayback.Controls.Add(this.chkAutoPlay);
+            this.panelPlayback.Controls.Add(this.chkLoop);
+            this.panelPlayback.Controls.Add(this.chkVerboseLog);
+            this.panelPlayback.Controls.Add(this.labelOptions);
+            this.panelPlayback.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panelPlayback.Location = new System.Drawing.Point(0, 457);
+            this.panelPlayback.Name = "panelPlayback";
+            this.panelPlayback.Size = new System.Drawing.Size(784, 80);
+            this.panelPlayback.TabIndex = 3;
+            // 
+            // btnPlay
+            // 
+            this.btnPlay.Location = new System.Drawing.Point(12, 12);
+            this.btnPlay.Name = "btnPlay";
+            this.btnPlay.Size = new System.Drawing.Size(75, 30);
+            this.btnPlay.TabIndex = 0;
+            this.btnPlay.Text = "Play (▶)";
+            this.btnPlay.UseVisualStyleBackColor = true;
+            this.btnPlay.Click += new System.EventHandler(this.btnPlay_Click);
+            // 
+            // btnStop
+            // 
+            this.btnStop.Location = new System.Drawing.Point(93, 12);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(75, 30);
+            this.btnStop.TabIndex = 1;
+            this.btnStop.Text = "Stop (■)";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            // 
+            // trackSeek
+            // 
+            this.trackSeek.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.trackSeek.AutoSize = false;
+            this.trackSeek.Location = new System.Drawing.Point(174, 12);
+            this.trackSeek.Maximum = 1000;
+            this.trackSeek.Name = "trackSeek";
+            this.trackSeek.Size = new System.Drawing.Size(260, 30);
+            this.trackSeek.TabIndex = 2;
+            this.trackSeek.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.trackSeek.MouseDown += new System.Windows.Forms.MouseEventHandler(this.trackSeek_MouseDown);
+            this.trackSeek.MouseUp += new System.Windows.Forms.MouseEventHandler(this.trackSeek_MouseUp);
+            // 
+            // lblTime
+            // 
+            this.lblTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblTime.AutoSize = true;
+            this.lblTime.Font = new System.Drawing.Font("굴림", 9.75F);
+            this.lblTime.Location = new System.Drawing.Point(440, 17);
+            this.lblTime.Name = "lblTime";
+            this.lblTime.Size = new System.Drawing.Size(135, 13);
+            this.lblTime.TabIndex = 3;
+            this.lblTime.Text = "00:00.000 / 00:00.000";
+            // 
+            // lblVol
+            // 
+            this.lblVol.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblVol.AutoSize = true;
+            this.lblVol.Location = new System.Drawing.Point(580, 18);
+            this.lblVol.Name = "lblVol";
+            this.lblVol.Size = new System.Drawing.Size(78, 12);
+            this.lblVol.TabIndex = 4;
+            this.lblVol.Text = "Volume: 70%";
+            // 
+            // trackVol
+            // 
+            this.trackVol.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.trackVol.AutoSize = false;
+            this.trackVol.Location = new System.Drawing.Point(660, 12);
+            this.trackVol.Maximum = 100;
+            this.trackVol.Name = "trackVol";
+            this.trackVol.Size = new System.Drawing.Size(110, 30);
+            this.trackVol.TabIndex = 5;
+            this.trackVol.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.trackVol.Value = 70;
+            this.trackVol.Scroll += new System.EventHandler(this.trackVol_Scroll);
+            // 
+            // chkAutoPlay
+            // 
+            this.chkAutoPlay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkAutoPlay.AutoSize = true;
+            this.chkAutoPlay.Checked = true;
+            this.chkAutoPlay.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkAutoPlay.Location = new System.Drawing.Point(80, 53);
+            this.chkAutoPlay.Name = "chkAutoPlay";
+            this.chkAutoPlay.Size = new System.Drawing.Size(137, 16);
+            this.chkAutoPlay.TabIndex = 7;
+            this.chkAutoPlay.Text = "Auto-Play on Select";
+            this.chkAutoPlay.UseVisualStyleBackColor = true;
+            // 
+            // chkLoop
+            // 
+            this.chkLoop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkLoop.AutoSize = true;
+            this.chkLoop.Location = new System.Drawing.Point(223, 53);
+            this.chkLoop.Name = "chkLoop";
+            this.chkLoop.Size = new System.Drawing.Size(88, 16);
+            this.chkLoop.TabIndex = 8;
+            this.chkLoop.Text = "Force Loop";
+            this.chkLoop.UseVisualStyleBackColor = true;
+            // 
+            // chkVerboseLog
+            // 
+            this.chkVerboseLog.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkVerboseLog.AutoSize = true;
+            this.chkVerboseLog.Location = new System.Drawing.Point(317, 53);
+            this.chkVerboseLog.Name = "chkVerboseLog";
+            this.chkVerboseLog.Size = new System.Drawing.Size(128, 16);
+            this.chkVerboseLog.TabIndex = 9;
+            this.chkVerboseLog.Text = "Verbose Log Save";
+            this.chkVerboseLog.UseVisualStyleBackColor = true;
+            // 
+            // labelOptions
+            // 
+            this.labelOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelOptions.AutoSize = true;
+            this.labelOptions.Font = new System.Drawing.Font("굴림", 9F);
+            this.labelOptions.Location = new System.Drawing.Point(13, 54);
+            this.labelOptions.Name = "labelOptions";
+            this.labelOptions.Size = new System.Drawing.Size(52, 12);
+            this.labelOptions.TabIndex = 6;
+            this.labelOptions.Text = "Options:";
             // 
             // FSB_BANK_Extractor_CS_GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(539, 554);
+            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.panelPlayback);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
-            this.Controls.Add(this.buttonBatchExtract);
-            this.Controls.Add(this.buttonClearFileList);
-            this.Controls.Add(this.buttonRemoveSelectedFiles);
-            this.Controls.Add(this.buttonAddFolder);
-            this.Controls.Add(this.buttonAddFiles);
-            this.Controls.Add(this.listViewFiles);
-            this.Controls.Add(this.textBoxLog);
-            this.Controls.Add(this.groupBoxOutputDir);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
-            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "FSB_BANK_Extractor_CS_GUI";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "FSB/BANK Extractor GUI";
-            this.Load += new System.EventHandler(this.Form1_Load);
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
-            this.groupBoxOutputDir.ResumeLayout(false);
-            this.groupBoxOutputDir.PerformLayout();
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.groupBoxTree.ResumeLayout(false);
+            this.treeViewContextMenu.ResumeLayout(false);
+            this.panelSearch.ResumeLayout(false);
+            this.panelSearch.PerformLayout();
+            this.groupBoxDetails.ResumeLayout(false);
+            this.panelPlayback.ResumeLayout(false);
+            this.panelPlayback.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackSeek)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackVol)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -363,31 +630,58 @@ namespace FSB_BANK_Extractor_CS_GUI
 
         #endregion
 
-        private System.Windows.Forms.GroupBox groupBoxOutputDir;
-        private System.Windows.Forms.RadioButton radioButtonOutputDirCustom;
-        private System.Windows.Forms.Button buttonOutputDirBrowse;
-        private System.Windows.Forms.TextBox textBoxOutputDirPath;
-        private System.Windows.Forms.RadioButton radioButtonOutputDirExe;
-        private System.Windows.Forms.RadioButton radioButtonOutputDirRes;
-        private System.Windows.Forms.CheckBox checkBoxVerboseLog;
-        private System.Windows.Forms.TextBox textBoxLog;
-        private System.Windows.Forms.ListView listViewFiles;
-        private System.Windows.Forms.ColumnHeader columnHeaderFileName;
-        private System.Windows.Forms.ColumnHeader columnHeaderStatus;
-        private System.Windows.Forms.Button buttonAddFiles;
-        private System.Windows.Forms.Button buttonAddFolder;
-        private System.Windows.Forms.Button buttonRemoveSelectedFiles;
-        private System.Windows.Forms.Button buttonClearFileList;
-        private System.Windows.Forms.Button buttonBatchExtract;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelProgress;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelSubSound;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelFile;
         private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem 메뉴ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 도움말ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 정보ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openFolderToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportCsvToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem extractCheckedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem extractAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem 끝내기ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+        private System.Windows.Forms.ToolStripProgressBar progressBar;
+        private System.Windows.Forms.ToolStripStatusLabel lblElapsedTime;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.GroupBox groupBoxTree;
+        private System.Windows.Forms.TreeView treeViewInfo;
+        private System.Windows.Forms.ListView lvSearchResults;
+        private System.Windows.Forms.ColumnHeader colName;
+        private System.Windows.Forms.ColumnHeader colType;
+        private System.Windows.Forms.ColumnHeader colPath;
+        private System.Windows.Forms.GroupBox groupBoxDetails;
+        private System.Windows.Forms.ListView listViewDetails;
+        private System.Windows.Forms.ColumnHeader colCategory;
+        private System.Windows.Forms.ColumnHeader colProperty;
+        private System.Windows.Forms.ColumnHeader colValue;
+        private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.Panel panelPlayback;
+        private System.Windows.Forms.Button btnStop;
+        private System.Windows.Forms.Button btnPlay;
+        private System.Windows.Forms.CheckBox chkAutoPlay;
+        private System.Windows.Forms.TrackBar trackVol;
+        private System.Windows.Forms.Label lblVol;
+        private System.Windows.Forms.Label lblTime;
+        private System.Windows.Forms.Panel panelSearch;
+        private System.Windows.Forms.TextBox txtSearch;
+        private System.Windows.Forms.Label labelSearch;
+        private System.Windows.Forms.TrackBar trackSeek;
+        private System.Windows.Forms.CheckBox chkLoop;
+        private System.Windows.Forms.CheckBox chkVerboseLog;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem expandAllToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem collapseAllToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip treeViewContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem playContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem stopContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripMenuItem extractContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem copyNameContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyPathContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem copyGuidContextMenuItem;
+        private System.Windows.Forms.Label labelOptions;
     }
 }
