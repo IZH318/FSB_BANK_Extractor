@@ -62,15 +62,18 @@ We will provide an update via this README if development on the CLI versions res
 
    - **Completely New Explorer-Style Interface:** 
        - Abandoned the simple file list method (ListView) and introduced a **TreeView system** utilizing the **FMOD Studio API** to visually display the Event, Group, Bus, and Audio hierarchy within Bank files.
+   - **Mass File Management and Index Tools:** 
+       - Supports **Jump to Index** to instantly move to a specific number (Index) among thousands of audio files, and **Select Range** (e.g., `100-200`) to check multiple files at once, maximizing workflow efficiency.
    - **Audio Preview System:** 
        - Instantly Play, Pause, and Stop audio within the program without needing to extract.
        - Features a **Seek Bar**, **Volume Control**, and **Force Loop** options for precise audio data verification.
    - **Strings Bank Integration:** 
        - Automatically detects or allows manual loading of `.strings.bank` files to convert encrypted GUIDs (e.g., `{a1b2...}`) into developer-assigned **real event names**.
-   - **Real-time Search and Filtering:** 
-       - A search bar with a debounce timer filters through thousands of audio nodes, displaying only matching items in a list format.
+   - **Real-time Search and Advanced Navigation:** 
+       - Equipped with an optimized search engine to quickly filter and display only matching items among thousands of audio nodes.
+       - Using **Open File Location** in search results instantly moves to the original location within the tree structure to identify the file's context.
    - **Integrated Details Panel:** 
-       - Eliminate the need for popup windows; clicking an item immediately displays metadata such as Format (PCM, ADPCM, etc.), Channels, Bitrate, Loop points, GUID, and original path in the right panel.
+       - Eliminates the inconvenience of popup windows by immediately displaying metadata such as Format (PCM, ADPCM, etc.), Channels, Bitrate, Loop points, GUID, and original path in the right panel when an item is clicked.
    - **Data Management and Export:** 
        - **CSV Export:** Export the structure and detailed properties of all currently loaded files to a CSV file.
        - **Checkbox-based Extraction:** Select specific items via checkboxes to batch extract only what you need.
@@ -82,8 +85,31 @@ We will provide an update via this README if development on the CLI versions res
 
 ## 🔄 Update History
 
-### v2.0.0 (2025-11-25) - GUI Only
-The GUI version has been revamped from a simple 'extractor' to a comprehensive **'FMOD Audio Analysis Tool'**. **(No changes to CLI versions)**
+### v2.1.0 (2025-11-26) - GUI Only
+Reflecting user requests and feedback, features have been added to **maximize the efficiency of managing large numbers of audio files**. **(No changes to CLI versions)**
+
+-   #### **🔧 Index Tools**
+    -   **Sub-Sound Index Support:** You can now see the internal index number of each audio file in the file list.
+    -   **Range Selection:** Without needing to check manually one by one, you can select (Check) hundreds of files at once using range input like `100-200` or comma separation like `10, 20`.
+    -   **Jump to Index:** Entering a specific number (Sub-Sound Index) will scroll to and focus on that audio file immediately.
+    -   **Smart Input Detection:** If the input contains symbols like `,` or `-`, it automatically switches to **Select Range** mode; if only numbers are entered, it switches to **Jump to Index** mode, reducing unnecessary clicks.
+
+-   #### **🔎 Search Enhancements**
+    -   **Open File Location:** Right-clicking an item in the search result list and selecting `Open File Location` switches to the Tree View, expands the path to the actual file, and highlights it.
+    -   **Consistent Menu UI:** The context menu in search results has been reorganized to match the main Tree View (Extract, Copy, etc.) for a unified User Experience (UX).
+
+-   #### **🛠 Other Improvements**
+    -   **Improved Safety:** Enhanced exception handling to display guidance messages when attempting invalid operations on empty containers or parent nodes without audio files.
+    -   **Help Updated:** Descriptions for new features (Index Tools, Context Menu) have been added to the Help (F1).
+
+<br>
+
+<details>
+<summary>📜 Previous Updates - Click to Expand</summary>
+<br>
+<details>
+<summary>v2.0.0 (2025-11-25)</summary>
+The GUI version has been revamped from a simple 'extractor' to a comprehensive <b>'FMOD Audio Analysis Tool'</b>. <b>(No changes to CLI versions)</b><br><br>
 
 -   #### **🖥️ Interface and Experience**
     -   **Structure Explorer Introduced**: Replaced the flat list view with a tree view interface that perfectly visualizes the internal hierarchy of FMOD Banks.
@@ -114,12 +140,8 @@ The GUI version has been revamped from a simple 'extractor' to a comprehensive *
 
 -   #### **ℹ️ Misc**
     -   **Program Info Update**: Program version updated to `2.0.0`, and some developer information display has been modified.
+</details>
 
-<br>
-
-<details>
-<summary>📜 Previous Updates - Click to Expand</summary>
-<br>
 <details>
 <summary>v1.1.0 (2025-11-18)</summary>
 This update focused on preventing data loss during file extraction and significantly improving the organization of extracted files.
@@ -289,3 +311,7 @@ This update focused on preventing data loss during file extraction and significa
     -   The `fsb_aud_extr.exe` created by **id-daemon** on the zenhax.com forum was a crucial reference that provided the core idea for this tool.
 -   **[Redelax](https://github.com/Redelax)**
     -   Reported the issue where data was overwritten and lost when filenames were duplicated. Thanks to this, we were able to improve the program to be more stable.
+-   **[TigerShota](https://github.com/TigerShota)**
+    -   Suggested range selection based on Sub-Sound Index, the ability to jump directly to an index, and the feature to open file locations from search results.
+-   **[immortalx74](https://github.com/immortalx74)**
+    -   Suggested the necessity of multi-selection for bulk file processing. We referred to this feedback to implement the Sub-Sound Index range selection feature.
