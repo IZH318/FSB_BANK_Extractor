@@ -15,8 +15,12 @@
  *      - Drag files INTO the app to load them.
  *      - Drag nodes OUT of the app to Windows Explorer to extract them immediately.
  *  - Search & Filtering: Real-time recursive search to quickly find Events or Audio files by name.
+ *      - "Open File Location" from search results to jump to the node in the tree view.
  *  - Data Export: Supports exporting the file tree structure and metadata to CSV format.
  *  - Logging: Generates detailed TSV (Tab-Separated Values) logs for extraction audits.
+ *  - Index Tools:
+ *      - Range Selection: Batch check items by Sub-Sound Index range (supports multi-range input).
+ *      - Jump to Index: Instantly navigate to a specific Sub-Sound Index.
  *
  * FMOD Engine & Development Environment Compatibility:
  *
@@ -25,15 +29,7 @@
  *  - Development Environment: Visual Studio 2022 (v143)
  *  - Target Framework: .NET Framework 4.8
  *  - Primary Test Platform: Windows 10 64-bit
- *  - Last Update: 2025-11-25
- *
- * Recommendations for Best Results:
- *  - Use FMOD Engine v2.03.06 libraries (fmod.dll, fmodstudio.dll) for stability.
- *  - Loading the 'Strings Bank' (e.g., Master.strings.bank) is recommended to resolve proper Event paths.
- *
- * Important Notes:
- *  - Compatibility with older FMOD versions (e.g., FMOD Ex) is not guaranteed.
- *  - Ensure the correct architecture (x86/x64) DLLs match your build target.
+ *  - Last Update: 2025-11-26
  */
 using System;
 using System.Collections.Concurrent;
@@ -129,6 +125,9 @@ namespace FSB_BANK_Extractor_CS_GUI
         {
             InitializeComponent();
 
+            // Unlink ContextMenu set in Designer to allow dynamic menu generation
+            lvSearchResults.ContextMenuStrip = null;
+
             // 1. Setup UI elements (Icons, Menus)
             SetupIcons();
             InitializeUiLogic();
@@ -216,13 +215,20 @@ namespace FSB_BANK_Extractor_CS_GUI
         {
             if (treeViewContextMenu != null)
             {
-                // Hide default items if necessary or add new ones
+                // Hide default items if necessary
                 if (playContextMenuItem != null) playContextMenuItem.Visible = false;
                 if (stopContextMenuItem != null) stopContextMenuItem.Visible = false;
 
+                // Add "Select All"
                 ToolStripMenuItem selectAllItem = new ToolStripMenuItem("Select All");
                 selectAllItem.Click += (s, e) => CheckAllInCurrentView();
                 treeViewContextMenu.Items.Insert(0, selectAllItem);
+
+                // Add "Index Tools" (Range Select / Jump)
+                treeViewContextMenu.Items.Insert(1, new ToolStripSeparator());
+                ToolStripMenuItem indexToolItem = new ToolStripMenuItem("Index Tools (Select/Jump)...");
+                indexToolItem.Click += IndexToolItem_Click;
+                treeViewContextMenu.Items.Insert(2, indexToolItem);
             }
         }
 
@@ -1101,7 +1107,10 @@ namespace FSB_BANK_Extractor_CS_GUI
                     if (node.Tag is NodeData data) type = data.Type.ToString();
                     item.SubItems.Add(type);
                     item.SubItems.Add(node.FullPath);
-                    item.Tag = node.Tag;
+
+                    // Store the actual TreeNode to allow "Open Location"
+                    item.Tag = node;
+
                     results.Add(item);
                 }
                 if (node.Nodes.Count > 0) SearchNodesRecursiveToList(node.Nodes.Cast<TreeNode>(), query, results);
@@ -1160,8 +1169,12 @@ namespace FSB_BANK_Extractor_CS_GUI
         {
             if (lvSearchResults.SelectedItems.Count > 0)
             {
-                _currentSelection = lvSearchResults.SelectedItems[0].Tag as NodeData;
-                UpdateDetailsView();
+                // Retrieve the stored TreeNode first, then get its data
+                if (lvSearchResults.SelectedItems[0].Tag is TreeNode node)
+                {
+                    _currentSelection = node.Tag as NodeData;
+                    UpdateDetailsView();
+                }
             }
         }
 
@@ -1172,12 +1185,97 @@ namespace FSB_BANK_Extractor_CS_GUI
 
         private void LvSearchResults_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right && lvSearchResults.FocusedItem != null && lvSearchResults.FocusedItem.Bounds.Contains(e.Location))
+            if (e.Button == MouseButtons.Right)
             {
-                if (lvSearchResults.FocusedItem.Tag is NodeData data)
+                ListViewItem focusedItem = lvSearchResults.FocusedItem;
+                if (focusedItem != null && focusedItem.Bounds.Contains(e.Location))
                 {
-                    SetupContextMenu(data);
-                    treeViewContextMenu.Show(Cursor.Position);
+                    // Retrieve the actual Node and Data
+                    TreeNode targetNode = focusedItem.Tag as TreeNode;
+                    NodeData data = targetNode?.Tag as NodeData;
+
+                    // Create dynamic context menu matching the main tree style
+                    ContextMenuStrip searchMenu = new ContextMenuStrip();
+
+                    // 1. Select All
+                    ToolStripMenuItem selectAllItem = new ToolStripMenuItem("Select All");
+                    selectAllItem.Click += (s, args) => CheckAllInCurrentView();
+                    searchMenu.Items.Add(selectAllItem);
+
+                    searchMenu.Items.Add(new ToolStripSeparator());
+
+                    // 2. Open File Location
+                    ToolStripMenuItem openLocItem = new ToolStripMenuItem("Open File Location");
+                    openLocItem.Click += (s, args) =>
+                    {
+                        if (targetNode != null)
+                        {
+                            // Switch View
+                            lvSearchResults.Visible = false;
+                            treeViewInfo.Visible = true;
+                            // Select and Expand
+                            treeViewInfo.SelectedNode = targetNode;
+                            targetNode.EnsureVisible();
+                            treeViewInfo.Focus();
+                        }
+                    };
+                    searchMenu.Items.Add(openLocItem);
+
+                    searchMenu.Items.Add(new ToolStripSeparator());
+
+                    // 3. Extract This Item (Enabled only for Audio)
+                    ToolStripMenuItem extractItem = new ToolStripMenuItem("Extract This Item...");
+                    if (data != null && data.Type == NodeType.AudioData)
+                    {
+                        // Use a lambda to set the specific node context for extraction
+                        extractItem.Click += (s, args) =>
+                        {
+                            // Temporarily select the node in tree to reuse existing extraction logic
+                            if (treeViewInfo.SelectedNode != targetNode)
+                                _currentSelection = data;
+
+                            extractContextMenuItem_Click(s, args);
+                        };
+                    }
+                    else
+                    {
+                        extractItem.Enabled = false;
+                    }
+                    searchMenu.Items.Add(extractItem);
+
+                    searchMenu.Items.Add(new ToolStripSeparator());
+
+                    // 4. Copy Options
+                    ToolStripMenuItem copyName = new ToolStripMenuItem("Copy Name");
+                    copyName.Click += (s, args) => Clipboard.SetText(targetNode != null ? targetNode.Text : focusedItem.Text);
+                    searchMenu.Items.Add(copyName);
+
+                    ToolStripMenuItem copyPath = new ToolStripMenuItem("Copy Path");
+                    copyPath.Click += (s, args) => Clipboard.SetText(targetNode != null ? targetNode.FullPath : focusedItem.SubItems[3].Text);
+                    searchMenu.Items.Add(copyPath);
+
+                    ToolStripMenuItem copyGuid = new ToolStripMenuItem("Copy GUID");
+                    bool hasGuid = false;
+                    if (data != null)
+                    {
+                        if (data.Data is EventDescription evt)
+                        {
+                            evt.getID(out GUID id);
+                            copyGuid.Click += (s, args) => Clipboard.SetText(GuidToString(id));
+                            hasGuid = true;
+                        }
+                        else if (data.Data is Bank bank)
+                        {
+                            bank.getID(out GUID id);
+                            copyGuid.Click += (s, args) => Clipboard.SetText(GuidToString(id));
+                            hasGuid = true;
+                        }
+                    }
+                    copyGuid.Enabled = hasGuid;
+                    searchMenu.Items.Add(copyGuid);
+
+                    // Show Menu
+                    searchMenu.Show(Cursor.Position);
                 }
             }
         }
@@ -1419,7 +1517,8 @@ namespace FSB_BANK_Extractor_CS_GUI
             {
                 foreach (ListViewItem item in lvSearchResults.CheckedItems)
                 {
-                    if (item.Tag is NodeData d && d.Type == NodeType.AudioData) extractList.Add(d);
+                    // Access NodeData via the saved TreeNode
+                    if (item.Tag is TreeNode node && node.Tag is NodeData d && d.Type == NodeType.AudioData) extractList.Add(d);
                 }
                 count = extractList.Count;
             }
@@ -1448,7 +1547,7 @@ namespace FSB_BANK_Extractor_CS_GUI
                     string logFile = Path.Combine(target, $"ExtractionLog_{DateTime.Now:yyyyMMdd_HHmmss}.log");
                     _logger = new LogWriter(logFile);
                     _logger.WriteRaw("[INFO] === Extraction Session Started ===");
-                    _logger.WriteRaw($"[INFO] App Version: 2.0.0 | FMOD Version: 2.03.06");
+                    _logger.WriteRaw($"[INFO] App Version: 2.1.0 | FMOD Version: 2.03.06");
                     _logger.WriteRaw($"[INFO] Target Directory: {target}");
                     _logger.WriteRaw($"[INFO] Total Files Queue: {count}");
                     _logger.WriteRaw("");
@@ -1805,6 +1904,139 @@ namespace FSB_BANK_Extractor_CS_GUI
             }
         }
 
+        private void IndexToolItem_Click(object sender, EventArgs e)
+        {
+            TreeNode targetNode = treeViewInfo.SelectedNode;
+            if (targetNode == null) return;
+
+            // 1. If Audio node selected, target the parent container
+            if (targetNode.Tag is NodeData childData && childData.Type == NodeType.AudioData)
+            {
+                targetNode = targetNode.Parent;
+            }
+
+            // 2. Validate Container: Must be FSB or Bank, and must have immediate AudioData children
+            bool isValidContainer = false;
+            if (targetNode.Tag is NodeData data)
+            {
+                if (data.Type == NodeType.Bank || data.Type == NodeType.FsbFile)
+                {
+                    foreach (TreeNode child in targetNode.Nodes)
+                    {
+                        if (child.Tag is NodeData cd && cd.Type == NodeType.AudioData)
+                        {
+                            isValidContainer = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!isValidContainer)
+            {
+                MessageBox.Show("Please select a file/folder that directly contains audio files.\n(e.g., an FSB node or a Bank node with audio)",
+                                "Invalid Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 3. Show Dialog
+            using (var form = new IndexToolForm())
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    string input = form.InputString;
+
+                    if (form.IsJumpMode)
+                    {
+                        // [Jump] Extract first number and jump
+                        int target = ExtractFirstNumber(input);
+                        if (target != -1) PerformJumpToIndex(targetNode, target);
+                        else MessageBox.Show("Invalid number format for Jump.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    else
+                    {
+                        // [Select] Parse full range string
+                        HashSet<int> targets = ParseRangeString(input);
+                        PerformSmartSelect(targetNode, targets);
+                    }
+                }
+            }
+        }
+
+        private int ExtractFirstNumber(string input)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(input, @"\d+");
+            if (match.Success && int.TryParse(match.Value, out int val)) return val;
+            return -1;
+        }
+
+        private HashSet<int> ParseRangeString(string input)
+        {
+            HashSet<int> result = new HashSet<int>();
+            string[] parts = input.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string part in parts)
+            {
+                string p = part.Trim();
+                if (string.IsNullOrEmpty(p)) continue;
+
+                if (p.Contains("-"))
+                {
+                    string[] rangeParts = p.Split('-');
+                    if (rangeParts.Length >= 2 &&
+                        int.TryParse(rangeParts[0], out int start) &&
+                        int.TryParse(rangeParts[1], out int end))
+                    {
+                        int min = Math.Min(start, end);
+                        int max = Math.Max(start, end);
+                        for (int i = min; i <= max; i++) result.Add(i);
+                    }
+                }
+                else
+                {
+                    if (int.TryParse(p, out int val)) result.Add(val);
+                }
+            }
+            return result;
+        }
+
+        private void PerformJumpToIndex(TreeNode parent, int targetIndex)
+        {
+            foreach (TreeNode node in parent.Nodes)
+            {
+                if (node.Tag is NodeData nd && nd.Type == NodeType.AudioData)
+                {
+                    if (nd.CachedAudio.Index == targetIndex)
+                    {
+                        treeViewInfo.SelectedNode = node;
+                        node.EnsureVisible(); // Expand parent and scroll to item
+                        treeViewInfo.Focus();
+                        return;
+                    }
+                }
+            }
+            MessageBox.Show($"Index {targetIndex} not found in this file.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void PerformSmartSelect(TreeNode parent, HashSet<int> targets)
+        {
+            treeViewInfo.BeginUpdate();
+            int count = 0;
+            foreach (TreeNode node in parent.Nodes)
+            {
+                if (node.Tag is NodeData nd && nd.Type == NodeType.AudioData)
+                {
+                    if (targets.Contains(nd.CachedAudio.Index))
+                    {
+                        node.Checked = true;
+                        count++;
+                    }
+                }
+            }
+            treeViewInfo.EndUpdate();
+            MessageBox.Show($"{count} items selected.", "Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
         private void ShowHelpForm()
         {
             HelpForm helpForm = new HelpForm();
@@ -1814,8 +2046,8 @@ namespace FSB_BANK_Extractor_CS_GUI
         private void ShowAboutDialog()
         {
             MessageBox.Show("FSB/BANK Extractor GUI\n" +
-                            "Version: 2.0.0\n" +
-                            "Update: 2025-11-25\n\n" +
+                            "Version: 2.1.0\n" +
+                            "Update: 2025-11-26\n\n" +
                             "Developer: (GitHub) IZH318\n" +
                             "Website: https://github.com/IZH318\n\n" +
                             "Using FMOD Studio API version 2.03.06\n" +
@@ -1979,6 +2211,97 @@ namespace FSB_BANK_Extractor_CS_GUI
                     try { _writer.Close(); _writer.Dispose(); } catch { }
                     _writer = null;
                 }
+            }
+        }
+
+        // --- Index Tool Dialog Form ---
+        public class IndexToolForm : Form
+        {
+            public string InputString { get; private set; }
+            public bool IsJumpMode { get; private set; }
+
+            private TextBox txtInput;
+            private RadioButton rdoJump;
+            private RadioButton rdoSelect;
+            private Button btnOk;
+
+            public IndexToolForm()
+            {
+                this.Text = "Sub-Sound Index Tools";
+                this.Size = new Size(350, 180);
+                this.FormBorderStyle = FormBorderStyle.FixedDialog;
+                this.StartPosition = FormStartPosition.CenterParent;
+                this.MaximizeBox = false;
+                this.MinimizeBox = false;
+
+                Label lblGuide = new Label()
+                {
+                    Text = "Enter Indexes (e.g. 100, 200-300, 500):",
+                    Location = new Point(10, 15),
+                    AutoSize = true
+                };
+
+                txtInput = new TextBox() { Location = new Point(10, 35), Width = 310 };
+                // Input validation/detection logic
+                txtInput.TextChanged += TxtInput_TextChanged;
+
+                GroupBox grpMode = new GroupBox()
+                {
+                    Text = "Action Mode",
+                    Location = new Point(10, 70),
+                    Size = new Size(310, 50)
+                };
+                rdoJump = new RadioButton() { Text = "Jump to Index", Location = new Point(20, 20), AutoSize = true, Checked = true };
+                rdoSelect = new RadioButton() { Text = "Select Range", Location = new Point(150, 20), AutoSize = true };
+                grpMode.Controls.Add(rdoJump);
+                grpMode.Controls.Add(rdoSelect);
+
+                btnOk = new Button() { Text = "OK", Location = new Point(110, 130), Width = 100, Height = 30 };
+                btnOk.Click += BtnOk_Click;
+
+                this.Size = new Size(350, 210);
+                this.Controls.AddRange(new Control[] { lblGuide, txtInput, grpMode, btnOk });
+                this.AcceptButton = btnOk;
+
+                this.Shown += (s, e) => { txtInput.Focus(); };
+            }
+
+            private void TxtInput_TextChanged(object sender, EventArgs e)
+            {
+                string text = txtInput.Text;
+
+                // Detect multi-range input -> Disable Jump mode
+                bool isMulti = text.Contains(",") || text.Contains("-");
+
+                if (isMulti)
+                {
+                    if (rdoJump.Enabled)
+                    {
+                        rdoJump.Enabled = false;
+                        rdoSelect.Checked = true;
+                    }
+                }
+                else
+                {
+                    if (!rdoJump.Enabled)
+                    {
+                        rdoJump.Enabled = true;
+                        rdoSelect.Text = "Select Range";
+                    }
+                }
+            }
+
+            private void BtnOk_Click(object sender, EventArgs e)
+            {
+                if (string.IsNullOrWhiteSpace(txtInput.Text))
+                {
+                    MessageBox.Show("Please enter a value.", "Empty Input");
+                    return;
+                }
+
+                InputString = txtInput.Text;
+                IsJumpMode = rdoJump.Checked;
+                this.DialogResult = DialogResult.OK;
             }
         }
 
